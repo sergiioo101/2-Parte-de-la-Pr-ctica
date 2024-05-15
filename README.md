@@ -1,1 +1,1 @@
-# 2-Parte-de-la-Pr-ctica
+# 2-Parte-de-la-Practica
