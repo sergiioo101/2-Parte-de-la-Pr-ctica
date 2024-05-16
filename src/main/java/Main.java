@@ -121,8 +121,7 @@ public class Main {
     private static void addPopulation() {
         JPanel panel = new JPanel(new GridLayout(0, 2));
         JTextField nameField = new JTextField();
-        JTextField startDateField = new JTextField();
-        JTextField endDateField = new JTextField();
+        JTextField numDaysField = new JTextField();
         JTextField numBacteriasField = new JTextField();
         JTextField temperaturaField = new JTextField();
         JComboBox<String> luminosidadComboBox = new JComboBox<>(LUMINOSIDAD_OPTIONS);
@@ -134,10 +133,8 @@ public class Main {
 
         panel.add(new JLabel("Nombre:"));
         panel.add(nameField);
-        panel.add(new JLabel("Fecha de Inicio (YYYY-MM-DD):"));
-        panel.add(startDateField);
-        panel.add(new JLabel("Fecha de Fin (YYYY-MM-DD):"));
-        panel.add(endDateField);
+        panel.add(new JLabel("Número de Días (máximo 30):"));
+        panel.add(numDaysField);
         panel.add(new JLabel("Número de Bacterias:"));
         panel.add(numBacteriasField);
         panel.add(new JLabel("Temperatura:"));
@@ -159,8 +156,9 @@ public class Main {
         if (result == JOptionPane.OK_OPTION) {
             try {
                 String nombre = nameField.getText();
-                LocalDate fechaInicio = LocalDate.parse(startDateField.getText(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                LocalDate fechaFin = LocalDate.parse(endDateField.getText(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                LocalDate fechaInicio = LocalDate.now();
+                int numDias = Integer.parseInt(numDaysField.getText());
+                LocalDate fechaFin = fechaInicio.plusDays(numDias);
                 int numBacterias = Integer.parseInt(numBacteriasField.getText());
                 double temperatura = Double.parseDouble(temperaturaField.getText());
                 String luminosidad = luminosidadComboBox.getSelectedItem().toString();
@@ -174,8 +172,6 @@ public class Main {
                 currentExperiment.addPoblacion(nuevaPoblacion);
                 updatePoblacionesList();
                 JOptionPane.showMessageDialog(frame, "Población añadida correctamente.");
-            } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(frame, "Error en las fechas. Asegúrese de que están en el formato correcto (YYYY-MM-DD).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(frame, "Por favor, introduzca números válidos en los campos numéricos.", "Error de Número", JOptionPane.ERROR_MESSAGE);
             }
