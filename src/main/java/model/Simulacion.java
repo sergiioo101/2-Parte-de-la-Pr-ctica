@@ -1,12 +1,13 @@
 package model;
+
 import java.util.Random;
 
-public class Poblacion {
+public class Simulacion {
     private Poblacion poblacion;
     private int[][] plato;
     private Random random = new Random();
 
-    public Poblacion(Poblacion poblacion) {
+    public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
         this.plato = new int[20][20];
         inicializarPlato();
@@ -26,7 +27,6 @@ public class Poblacion {
 
     public void ejecutarSimulacion(int days) {
         for (int day = 0; day < days; day++) {
-            // Simular un día
             simularDia();
         }
     }
@@ -47,30 +47,27 @@ public class Poblacion {
         while (bacteriasRestantes-- > 0) {
             int fate = random.nextInt(100);
             if (fate < 3) {
-                // Bacteria muere
                 plato[x][y]--;
             } else if (fate >= 3 && fate < 60) {
-                // Bacteria se queda
+                // La bacteria se queda
             } else {
-                // Bacteria se mueve
                 moverBacteria(x, y, fate);
             }
         }
     }
 
     private void moverBacteria(int x, int y, int fate) {
-        // Logica para mover bacterias basada en 'fate'
         int newX = x, newY = y;
-        if (fate >= 60 && fate < 65) newX = x - 1; // Mover hacia arriba
-        else if (fate >= 65 && fate < 70) newX = x + 1; // Mover hacia abajo
-        else if (fate >= 70 && fate < 75) newY = y - 1; // Mover hacia izquierda
-        else if (fate >= 75 && fate < 80) newY = y + 1; // Mover hacia derecha
+        if (fate >= 60 && fate < 65) newX = x - 1;
+        else if (fate >= 65 && fate < 70) newX = x + 1;
+        else if (fate >= 70 && fate < 75) newY = y - 1;
+        else if (fate >= 75 && fate < 80) newY = y + 1;
 
-        // Verificar límites del plato
         if (newX >= 0 && newX < 20 && newY >= 0 && newY < 20) {
             plato[x][y]--;
             plato[newX][newY]++;
         }
     }
 }
+
 

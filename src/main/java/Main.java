@@ -1,6 +1,8 @@
 import data.FileManager;
 import model.Experimento;
 import model.Poblacion;
+import model.Poblacion;
+import model.Simulacion;
 
 import javax.swing.*;
 import java.awt.*;
@@ -125,9 +127,8 @@ public class Main {
         JTextField temperaturaField = new JTextField();
         JComboBox<String> luminosidadComboBox = new JComboBox<>(LUMINOSIDAD_OPTIONS);
         JTextField comidaInicialField = new JTextField();
-        JTextField diaIncrementoField = new JTextField();
-        JTextField comidaMaximaField = new JTextField();
         JTextField comidaFinalField = new JTextField();
+        JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"linear", "constant", "alternating"});
 
         panel.add(new JLabel("Nombre:"));
         panel.add(nameField);
@@ -141,14 +142,12 @@ public class Main {
         panel.add(temperaturaField);
         panel.add(new JLabel("Luminosidad:"));
         panel.add(luminosidadComboBox);
-        panel.add(new JLabel("Comida Inicial:"));
+        panel.add(new JLabel("Comida Inicial (en microgramos):"));
         panel.add(comidaInicialField);
-        panel.add(new JLabel("Día de Incremento Máximo:"));
-        panel.add(diaIncrementoField);
-        panel.add(new JLabel("Comida Máxima en el Día de Incremento:"));
-        panel.add(comidaMaximaField);
-        panel.add(new JLabel("Comida Final en Día 30:"));
+        panel.add(new JLabel("Comida Final (en microgramos):"));
         panel.add(comidaFinalField);
+        panel.add(new JLabel("Tipo de Alimentación:"));
+        panel.add(tipoAlimentacionComboBox);
 
         int result = JOptionPane.showConfirmDialog(frame, panel, "Añadir Población", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
@@ -160,17 +159,10 @@ public class Main {
                 double temperatura = Double.parseDouble(temperaturaField.getText());
                 String luminosidad = luminosidadComboBox.getSelectedItem().toString();
                 int comidaInicial = Integer.parseInt(comidaInicialField.getText());
-                int diaIncremento = Integer.parseInt(diaIncrementoField.getText());
-                int comidaMaxima = Integer.parseInt(comidaMaximaField.getText());
                 int comidaFinal = Integer.parseInt(comidaFinalField.getText());
+                String tipoAlimentacion = tipoAlimentacionComboBox.getSelectedItem().toString();
 
-                // Limitar la duración del experimento a 30 días
-                if (fechaInicio.until(fechaFin).getDays() > 30) {
-                    fechaFin = fechaInicio.plusDays(30);
-                    JOptionPane.showMessageDialog(frame, "La duración del experimento se ha limitado a 30 días.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                }
-
-                Poblacion nuevaPoblacion = new Poblacion(nombre, fechaInicio, fechaFin, numBacterias, temperatura, luminosidad, comidaInicial, diaIncremento, comidaMaxima, comidaFinal);
+                Poblacion nuevaPoblacion = new Poblacion(nombre, fechaInicio, fechaFin, numBacterias, temperatura, luminosidad, comidaInicial, comidaFinal);
                 currentExperiment.addPoblacion(nuevaPoblacion);
                 updatePoblacionesList();
                 JOptionPane.showMessageDialog(frame, "Población añadida correctamente.");
@@ -209,6 +201,8 @@ public class Main {
         JScrollPane scrollPane = new JScrollPane(detailsArea);
 
         JButton btnShowDetails = new JButton("Mostrar Detalles");
+        JButton btnRunSimulation = new JButton("Ejecutar Simulación");
+
         btnShowDetails.addActionListener(e -> {
             Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
             if (selectedPoblacion != null) {
@@ -218,11 +212,17 @@ public class Main {
             }
         });
 
+        btnRunSimulation.addActionListener(e -> runSimulation());
+
         panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(btnShowDetails, BorderLayout.SOUTH);
+        JPanel buttonsPanel = new JPanel(new FlowLayout());
+        buttonsPanel.add(btnShowDetails);
+        buttonsPanel.add(btnRunSimulation);
+        panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
     }
+
 
     private static String getPopulationDetails(Poblacion poblacion) {
         StringBuilder details = new StringBuilder();
@@ -275,6 +275,17 @@ public class Main {
         }
         return comidaPorDia;
     }
+    private static void runSimulation() {
+        Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
+        if (selectedPoblacion != null) {
+            Simulacion simulacion = new Simulacion(selectedPoblacion);
+            simulacion.ejecutarSimulacion(selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1);
+            JOptionPane.showMessageDialog(frame, "Simulación completada para la población seleccionada.");
+        } else {
+            JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 
 }
 
