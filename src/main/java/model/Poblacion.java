@@ -1,12 +1,11 @@
 package model;
-
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Poblacion implements Serializable {
     private static final long serialVersionUID = 5128373257598436884L;
-
 
     private String nombre;
     private LocalDate fechaInicio;
@@ -14,17 +13,12 @@ public class Poblacion implements Serializable {
     private int numBacterias;
     private double temperatura;
     private String luminosidad;
-    private int comidaInicial;
-    private int diaIncremento;
-    private int comidaMaxima;
-    private int comidaFinal;
-    private int[] planAlimentacion;
-    private double growthRate;  // Tasa de crecimiento
-    private String antibioticResistance; // Resistencia a antibióticos
+    private int comidaInicial; // En microgramos
+    private int comidaFinal; // En microgramos
+    private List<Integer> planAlimentacion; // Lista dinámica para diferentes patrones de alimentación
 
     public Poblacion(String nombre, LocalDate fechaInicio, LocalDate fechaFin, int numBacterias,
-                     double temperatura, String luminosidad, int comidaInicial, int diaIncremento,
-                     int comidaMaxima, int comidaFinal) {
+                     double temperatura, String luminosidad, int comidaInicial, int comidaFinal) {
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
@@ -32,83 +26,38 @@ public class Poblacion implements Serializable {
         this.temperatura = temperatura;
         this.luminosidad = luminosidad;
         this.comidaInicial = comidaInicial;
-        this.diaIncremento = diaIncremento;
-        this.comidaMaxima = comidaMaxima;
         this.comidaFinal = comidaFinal;
-        this.planAlimentacion = new int[30];  // Assuming each experiment lasts 30 days
-        calcularPlanAlimentacion();
+        this.planAlimentacion = new ArrayList<>();
+        this.generarPlanAlimentacion(); // Método para generar el plan de alimentación según el patrón seleccionado
     }
 
-    private void calcularPlanAlimentacion() {
-        double incrementoDiario = (comidaMaxima - comidaInicial) / (double) diaIncremento;
-        double decrementoDiario = (comidaMaxima - comidaFinal) / (double) (30 - diaIncremento);
+    // Generación dinámica del plan de alimentación
+    private void generarPlanAlimentacion() {
+        // Ejemplo simple de un incremento lineal seguido de un decremento, ajustable a patrones específicos
+        int duracion = fechaInicio.until(fechaFin).getDays() + 1;
+        int comidaMaxima = 300000; // Ejemplo de comida máxima en microgramos
+        double incrementoDiario = (double) (comidaMaxima - comidaInicial) / duracion / 2;
+        double decrementoDiario = (double) (comidaMaxima - comidaFinal) / duracion / 2;
 
-        for (int i = 0; i < 30; i++) {
-            if (i < diaIncremento) {
-                planAlimentacion[i] = comidaInicial + (int) (i * incrementoDiario);
+        for (int i = 0; i < duracion; i++) {
+            if (i < duracion / 2) {
+                planAlimentacion.add((int) (comidaInicial + i * incrementoDiario));
             } else {
-                planAlimentacion[i] = comidaMaxima - (int) ((i - diaIncremento) * decrementoDiario);
+                planAlimentacion.add((int) (comidaMaxima - (i - duracion / 2) * decrementoDiario));
             }
         }
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public int[] getPlanAlimentacion() {
-        return planAlimentacion;
-    }
-
-    @Override
-    public String toString() {
-        return "Poblacion{" +
-                "nombre:'" + nombre + '\'' +
-                ", fechaInicio:" + fechaInicio +
-                ", fechaFin:" + fechaFin +
-                ", numBacterias:" + numBacterias +
-                ", temperatura:" + temperatura +
-                ", luminosidad:'" + luminosidad + '\'' +
-                ", planAlimentacion:" + Arrays.toString(planAlimentacion) +
-                '}';
-    }
-
-    public LocalDate getFechaInicio() {
-        return fechaInicio;
-    }
-
-    public LocalDate getFechaFin() {
-        return fechaFin;
-    }
-
-    public int getNumBacterias() {
-        return numBacterias;
-    }
-
-    public double getTemperatura() {
-        return temperatura;
-    }
-
-    public String getLuminosidad() {
-        return luminosidad;
-    }
-
-    public int getComidaInicial() {
-        return comidaInicial;
-    }
-
-    public int getDiaIncremento() {
-        return diaIncremento;
-    }
-
-    public int getComidaMaxima() {
-        return comidaMaxima;
-    }
-
-    public int getComidaFinal() {
-        return comidaFinal;
-    }
+    // Getters y setters actualizados
+    public String getNombre() { return nombre; }
+    public LocalDate getFechaInicio() { return fechaInicio; }
+    public LocalDate getFechaFin() { return fechaFin; }
+    public int getNumBacterias() { return numBacterias; }
+    public double getTemperatura() { return temperatura; }
+    public String getLuminosidad() { return luminosidad; }
+    public List<Integer> getPlanAlimentacion() { return planAlimentacion; }
 }
+
 
 
 
