@@ -129,6 +129,8 @@ public class Main {
         JTextField comidaInicialField = new JTextField();
         JTextField comidaFinalField = new JTextField();
         JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"linear", "constant", "alternating"});
+        JTextField diaIncrementoField = new JTextField();
+        JTextField comidaMaximaField = new JTextField();
 
         panel.add(new JLabel("Nombre:"));
         panel.add(nameField);
@@ -148,6 +150,10 @@ public class Main {
         panel.add(comidaFinalField);
         panel.add(new JLabel("Tipo de Alimentación:"));
         panel.add(tipoAlimentacionComboBox);
+        panel.add(new JLabel("Día de Incremento:"));
+        panel.add(diaIncrementoField);
+        panel.add(new JLabel("Comida Máxima:"));
+        panel.add(comidaMaximaField);
 
         int result = JOptionPane.showConfirmDialog(frame, panel, "Añadir Población", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
@@ -161,8 +167,10 @@ public class Main {
                 int comidaInicial = Integer.parseInt(comidaInicialField.getText());
                 int comidaFinal = Integer.parseInt(comidaFinalField.getText());
                 String tipoAlimentacion = tipoAlimentacionComboBox.getSelectedItem().toString();
+                int diaIncremento = Integer.parseInt(diaIncrementoField.getText());
+                int comidaMaxima = Integer.parseInt(comidaMaximaField.getText());
 
-                Poblacion nuevaPoblacion = new Poblacion(nombre, fechaInicio, fechaFin, numBacterias, temperatura, luminosidad, comidaInicial, comidaFinal);
+                Poblacion nuevaPoblacion = new Poblacion(nombre, fechaInicio, fechaFin, numBacterias, temperatura, luminosidad, comidaInicial, comidaFinal, diaIncremento, comidaMaxima, tipoAlimentacion);
                 currentExperiment.addPoblacion(nuevaPoblacion);
                 updatePoblacionesList();
                 JOptionPane.showMessageDialog(frame, "Población añadida correctamente.");
