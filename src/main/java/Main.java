@@ -282,20 +282,19 @@ public class Main {
     private static void runSimulation() {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
-            SwingWorker<int[][], Void> worker = new SwingWorker<int[][], Void>() {
+            SwingWorker<int[][][], Void> worker = new SwingWorker<int[][][], Void>() {
                 @Override
-                protected int[][] doInBackground() {
+                protected int[][][] doInBackground() {
                     Simulacion simulacion = new Simulacion(selectedPoblacion);
-                    int days = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
-                    simulacion.ejecutarSimulacion(days);
-                    return simulacion.getPlato();
+                    simulacion.ejecutarSimulacion();
+                    return simulacion.getResultados();
                 }
 
                 @Override
                 protected void done() {
                     try {
-                        int[][] resultadoPlato = get();
-                        mostrarResultadosSimulacion(resultadoPlato);
+                        int[][][] resultados = get();
+                        mostrarResultadosSimulacion(resultados);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
