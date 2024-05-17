@@ -218,15 +218,14 @@ public class Main {
 
         btnRunSimulation.addActionListener(e -> runSimulation());
 
-        panel.add(scrollPane, BorderLayout.CENTER);
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnShowDetails);
         buttonsPanel.add(btnRunSimulation);
+        panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
     }
-
 
     private static String getPopulationDetails(Poblacion poblacion) {
         StringBuilder details = new StringBuilder();
@@ -279,18 +278,53 @@ public class Main {
         }
         return comidaPorDia;
     }
+
     private static void runSimulation() {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
-            Simulacion simulacion = new Simulacion(selectedPoblacion);
-            simulacion.ejecutarSimulacion(selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1);
-            JOptionPane.showMessageDialog(frame, "Simulación completada para la población seleccionada.");
+            SwingWorker<int[][], Void> worker = new SwingWorker<int[][], Void>() {
+                @Override
+                protected int[][] doInBackground() {
+                    Simulacion simulacion = new Simulacion(selectedPoblacion);
+                    int days = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
+                    simulacion.ejecutarSimulacion(days);
+                    return simulacion.getPlato();
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        int[][] resultadoPlato = get();
+                        mostrarResultadosSimulacion(resultadoPlato);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            worker.execute();
         } else {
             JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-
+    private static void mostrarResultadosSimulacion(int[][] resultadoPlato) {
+        JPanel panel = new JPanel(new GridLayout(20, 20));
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                JLabel label = new JLabel();
+                label.setOpaque(true);
+                int bacterias = resultadoPlato[i][j];
+                if (bacterias >= 20) label.setBackground(Color.RED);
+                else if (bacterias >= 15) label.setBackground(Color.MAGENTA);
+                else if (bacterias >= 10) label.setBackground(Color.ORANGE);
+                else if (bacterias >= 5) label.setBackground(Color.YELLOW);
+                else if (bacterias >= 1) label.setBackground(Color.GREEN);
+                else label.setBackground(Color.WHITE);
+                panel.add(label);
+            }
+        }
+        JOptionPane.showMessageDialog(frame, panel, "Resultados de la Simulación", JOptionPane.PLAIN_MESSAGE);
+    }
 }
 
 
