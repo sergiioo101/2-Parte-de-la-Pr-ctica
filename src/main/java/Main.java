@@ -323,7 +323,10 @@ public class Main {
                     panel.add(label);
                 }
             }
-            JOptionPane.showMessageDialog(frame, panel, "Resultados del Día " + (day + 1), JOptionPane.PLAIN_MESSAGE);
+            int finalDay = day + 1;
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(frame, panel, "Resultados del Día " + finalDay, JOptionPane.PLAIN_MESSAGE);
+            });
         }
     }
 }
