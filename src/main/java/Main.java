@@ -327,7 +327,6 @@ public class Main {
             JOptionPane.showMessageDialog(frame, panel, "Resultados del Día " + (day + 1), JOptionPane.PLAIN_MESSAGE);
         }
     }
-
 }
 
 
