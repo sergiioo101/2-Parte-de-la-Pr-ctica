@@ -381,6 +381,11 @@ public class Main {
                         e.printStackTrace();
                     }
                 });
+
+                // Mostrar los resultados finales después de la simulación
+                int[][][] resultadosBacterias = simulacion.getResultadosBacterias();
+                int[][][] resultadosComida = simulacion.getResultadosComida();
+                mostrarResultadosFinales(resultadosBacterias, resultadosComida);
             }).start();
         } else {
             JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -411,6 +416,8 @@ public class Main {
                 simulationGridPanel.add(cell);
             }
         }
+        simulationGridPanel.revalidate();
+        simulationGridPanel.repaint();
     }
 
     private static String getPopulationDetails(Poblacion poblacion) {
@@ -456,6 +463,32 @@ public class Main {
             comidaPorDia.add(comidaDia);
         }
         return comidaPorDia;
+    }
+
+    private static void mostrarResultadosFinales(int[][][] resultadosBacterias, int[][][] resultadosComida) {
+        JTextArea resultsArea = new JTextArea();
+        resultsArea.setEditable(false);
+        StringBuilder results = new StringBuilder();
+
+        for (int day = 0; day < resultadosBacterias.length; day++) {
+            results.append("Día ").append(day + 1).append(":\nBacterias:\n");
+            for (int i = 0; i < 20; i++) {
+                for (int j = 0; j < 20; j++) {
+                    results.append(String.format("%3d", resultadosBacterias[day][i][j])).append(" ");
+                }
+                results.append("\n");
+            }
+            results.append("Comida:\n");
+            for (int i = 0; i < 20; i++) {
+                for (int j = 0; j < 20; j++) {
+                    results.append(String.format("%3d", resultadosComida[day][i][j])).append(" ");
+                }
+                results.append("\n");
+            }
+            results.append("\n");
+        }
+
+        JOptionPane.showMessageDialog(frame, new JScrollPane(resultsArea), "Resultados de la Simulación", JOptionPane.INFORMATION_MESSAGE);
     }
 }
 

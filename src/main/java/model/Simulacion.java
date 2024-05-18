@@ -5,15 +5,19 @@ import java.util.function.BiConsumer;
 
 public class Simulacion {
     private Poblacion poblacion;
-    private int[][] plato;
-    private int[][][] resultados; // Para almacenar el estado del plato cada día
+    private int[][] platoBacterias;
+    private int[][] platoComida;
+    private int[][][] resultadosBacterias;
+    private int[][][] resultadosComida;
     private Random random = new Random();
 
     public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
-        this.plato = new int[20][20];
+        this.platoBacterias = new int[20][20];
+        this.platoComida = new int[20][20];
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
-        this.resultados = new int[days][20][20];
+        this.resultadosBacterias = new int[days][20][20];
+        this.resultadosComida = new int[days][20][20];
         inicializarPlato();
     }
 
@@ -24,7 +28,7 @@ public class Simulacion {
 
         for (int i = centro; i < centro + tamanoSubcuadro; i++) {
             for (int j = centro; j < centro + tamanoSubcuadro; j++) {
-                this.plato[i][j] = bacteriasPorCelda;
+                this.platoBacterias[i][j] = bacteriasPorCelda;
             }
         }
     }
@@ -32,10 +36,10 @@ public class Simulacion {
     public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> actualizarUI) {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
-            simularDia();
             repartirComida(poblacion.getPlanAlimentacion().get(day));
+            simularDia();
             guardarResultadoDia(day);
-            actualizarUI.accept(day, plato);
+            actualizarUI.accept(day, platoBacterias);
         }
     }
 
@@ -44,7 +48,7 @@ public class Simulacion {
 
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                int bacterias = plato[i][j];
+                int bacterias = platoBacterias[i][j];
                 if (bacterias > 0) {
                     for (int k = 0; k < bacterias; k++) {
                         simularBacteria(i, j, nuevoPlato);
@@ -53,24 +57,24 @@ public class Simulacion {
             }
         }
 
-        plato = nuevoPlato;
+        platoBacterias = nuevoPlato;
     }
 
     private void simularBacteria(int x, int y, int[][] nuevoPlato) {
         int comidaConsumida = 0;
         for (int step = 0; step < 10; step++) {
-            int comidaEnCelda = plato[x][y];
+            int comidaEnCelda = platoComida[x][y];
             if (comidaEnCelda >= 100) {
                 comidaEnCelda -= 20;
                 comidaConsumida += 20;
-                plato[x][y] = comidaEnCelda;
+                platoComida[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 3) return; // Muere
                 else if (fate >= 60 && fate < 100) moverBacteria(x, y, fate, nuevoPlato);
             } else if (comidaEnCelda >= 10) {
                 comidaEnCelda -= 10;
                 comidaConsumida += 10;
-                plato[x][y] = comidaEnCelda;
+                platoComida[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 6) return; // Muere
                 else if (fate >= 20 && fate < 100) moverBacteria(x, y, fate, nuevoPlato);
@@ -112,7 +116,7 @@ public class Simulacion {
         int comidaPorCelda = comidaTotal / (20 * 20);
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                plato[i][j] += comidaPorCelda;
+                platoComida[i][j] = comidaPorCelda;
             }
         }
     }
@@ -120,15 +124,21 @@ public class Simulacion {
     private void guardarResultadoDia(int day) {
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                resultados[day][i][j] = plato[i][j];
+                resultadosBacterias[day][i][j] = platoBacterias[i][j];
+                resultadosComida[day][i][j] = platoComida[i][j];
             }
         }
     }
 
-    public int[][][] getResultados() {
-        return resultados;
+    public int[][][] getResultadosBacterias() {
+        return resultadosBacterias;
+    }
+
+    public int[][][] getResultadosComida() {
+        return resultadosComida;
     }
 }
+
 
 
 
