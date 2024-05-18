@@ -15,6 +15,7 @@ public class Main {
     private static JList<String> listPoblaciones; // Lista para mostrar nombres de poblaciones
     private static DefaultListModel<String> listModel; // Modelo de datos para la lista
     private static final String[] LUMINOSIDAD_OPTIONS = {"Alta", "Media", "Baja"};
+    private static JTextArea simulationDetails;
 
     public static void main(String[] args) {
         // Mensaje de bienvenida
@@ -223,12 +224,12 @@ public class Main {
 
     private static JPanel createSimulationPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        JTextArea simulationDetails = new JTextArea();
+        simulationDetails = new JTextArea();
         simulationDetails.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(simulationDetails);
 
         JButton btnRunSimulation = new JButton("Ejecutar Simulación");
-        btnRunSimulation.addActionListener(e -> runSimulation(simulationDetails));
+        btnRunSimulation.addActionListener(e -> runSimulation());
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
@@ -239,7 +240,7 @@ public class Main {
         return panel;
     }
 
-    private static void runSimulation(JTextArea simulationDetails) {
+    private static void runSimulation() {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
             simulationDetails.setText(""); // Clear previous results
@@ -257,7 +258,7 @@ public class Main {
                         int[][][] resultados = get();
                         simulationDetails.append(getPopulationDetails(selectedPoblacion));
                         simulationDetails.append("\nResultados de la simulación:\n");
-                        mostrarResultadosSimulacion(resultados, simulationDetails);
+                        mostrarResultadosSimulacion(resultados);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -269,7 +270,7 @@ public class Main {
         }
     }
 
-    private static void mostrarResultadosSimulacion(int[][][] resultados, JTextArea simulationDetails) {
+    private static void mostrarResultadosSimulacion(int[][][] resultados) {
         for (int day = 0; day < resultados.length; day++) {
             int[][] plato = resultados[day];
             simulationDetails.append("Día " + (day + 1) + ":\n");
@@ -293,8 +294,9 @@ public class Main {
         details.append("Temperatura: ").append(poblacion.getTemperatura()).append("\n");
         details.append("Luminosidad: ").append(poblacion.getLuminosidad()).append("\n");
         details.append("Comida Inicial: ").append(poblacion.getComidaInicial()).append("\n");
-        details.append("Comida Final: ").append(poblacion.getComidaFinal()).append("\n");
-        details.append("Tipo de Alimentación: ").append(poblacion.getTipoAlimentacion()).append("\n");
+        details.append("Día de Incremento Máximo: ").append(poblacion.getDiaIncremento()).append("\n");
+        details.append("Comida Máxima en el Día de Incremento: ").append(poblacion.getComidaMaxima()).append("\n");
+        details.append("Comida Final en Día 30: ").append(poblacion.getComidaFinal()).append("\n");
         details.append("\n");
 
         details.append("Cálculo estimado de la cantidad de comida por día:\n");
@@ -308,8 +310,9 @@ public class Main {
     private static List<Integer> calcularComidaPorDia(Poblacion poblacion) {
         List<Integer> comidaPorDia = new ArrayList<>();
         int comidaInicial = poblacion.getComidaInicial();
+        int diaIncremento = poblacion.getDiaIncremento();
+        int comidaMaxima = poblacion.getComidaMaxima();
         int comidaFinal = poblacion.getComidaFinal();
-        String tipoAlimentacion = poblacion.getTipoAlimentacion();
         int numDias = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
 
         // Asegurarse de que la duración de la población no supere los 30 días
@@ -317,7 +320,7 @@ public class Main {
             numDias = 30;
         }
 
-        switch (tipoAlimentacion.toLowerCase()) {
+        switch (poblacion.getTipoAlimentacion().toLowerCase()) {
             case "linear":
                 double incrementoDiario = (double) (comidaFinal - comidaInicial) / numDias;
                 for (int i = 0; i < numDias; i++) {
@@ -335,12 +338,15 @@ public class Main {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Tipo de alimentación desconocido: " + tipoAlimentacion);
+                throw new IllegalArgumentException("Tipo de alimentación desconocido: " + poblacion.getTipoAlimentacion());
         }
 
         return comidaPorDia;
     }
 }
+
+
+
 
 
 
