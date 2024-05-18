@@ -16,6 +16,8 @@ public class Main {
     private static DefaultListModel<String> listModel; // Modelo de datos para la lista
     private static JPanel simulationGridPanel;
     private static final String[] LUMINOSIDAD_OPTIONS = {"Alta", "Media", "Baja"};
+    private static JLabel dayLabel; // Nuevo JLabel para mostrar el día actual
+
 
     public static void main(String[] args) {
         // Mensaje de bienvenida
@@ -333,6 +335,7 @@ public class Main {
     private static JPanel createSimulationPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
+        // Crear el panel de la cuadrícula de simulación
         simulationGridPanel = new JPanel(new GridLayout(20, 20)) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -349,8 +352,12 @@ public class Main {
 
         panel.add(simulationGridPanel, BorderLayout.CENTER);
 
-        JButton btnRunSimulation = new JButton("Ejecutar Simulación");
+        // Crear el JLabel para mostrar el día actual
+        dayLabel = new JLabel("Día: 0");
+        panel.add(dayLabel, BorderLayout.NORTH);
 
+        // Botón para ejecutar la simulación
+        JButton btnRunSimulation = new JButton("Ejecutar Simulación");
         btnRunSimulation.addActionListener(e -> runSimulation());
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
@@ -371,6 +378,7 @@ public class Main {
                 Simulacion simulacion = new Simulacion(selectedPoblacion);
                 simulacion.ejecutarSimulacionDinamica((dia, plato) -> {
                     SwingUtilities.invokeLater(() -> {
+                        dayLabel.setText("Día: " + (dia + 1)); // Actualizar el JLabel del día
                         actualizarCuadricula(plato);
                         simulationGridPanel.revalidate();
                         simulationGridPanel.repaint();
