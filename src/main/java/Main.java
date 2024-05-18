@@ -413,46 +413,6 @@ public class Main {
         }
     }
 
-    private static void mostrarResultadosSimulacion(int[][][] resultados) {
-        for (int day = 0; day < resultados.length; day++) {
-            int[][] plato = resultados[day];
-            for (int i = 0; i < 20; i++) {
-                for (int j = 0; j < 20; j++) {
-                    System.out.print(String.format("%3d", plato[i][j]) + " ");
-                }
-                System.out.println();
-            }
-            System.out.println();
-        }
-    }
-
-    private static void mostrarCuadriculaSimulacion(int[][] resultadosDia) {
-        simulationGridPanel.removeAll();
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
-                JLabel cell = new JLabel();
-                cell.setOpaque(true);
-                int bacterias = resultadosDia[i][j];
-                if (bacterias >= 20) {
-                    cell.setBackground(Color.RED);
-                } else if (bacterias >= 15) {
-                    cell.setBackground(Color.MAGENTA);
-                } else if (bacterias >= 10) {
-                    cell.setBackground(Color.ORANGE);
-                } else if (bacterias >= 5) {
-                    cell.setBackground(Color.YELLOW);
-                } else if (bacterias >= 1) {
-                    cell.setBackground(Color.GREEN);
-                } else {
-                    cell.setBackground(Color.WHITE);
-                }
-                simulationGridPanel.add(cell);
-            }
-        }
-        simulationGridPanel.revalidate();
-        simulationGridPanel.repaint();
-    }
-
     private static String getPopulationDetails(Poblacion poblacion) {
         StringBuilder details = new StringBuilder();
         details.append("Detalles de la Población:\n");
