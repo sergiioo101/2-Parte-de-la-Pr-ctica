@@ -3,7 +3,6 @@ package model;
 import java.util.Random;
 import java.util.function.BiConsumer;
 
-
 public class Simulacion {
     private Poblacion poblacion;
     private int[][] plato;
@@ -19,28 +18,28 @@ public class Simulacion {
     }
 
     private void inicializarPlato() {
-        int centro = 10;
+        int centro = 8;
         int tamanoSubcuadro = 4;
         int bacteriasPorCelda = poblacion.getNumBacterias() / (tamanoSubcuadro * tamanoSubcuadro);
 
-        for (int i = centro - 2; i < centro + 2; i++) {
-            for (int j = centro - 2; j < centro + 2; j++) {
+        for (int i = centro; i < centro + tamanoSubcuadro; i++) {
+            for (int j = centro; j < centro + tamanoSubcuadro; j++) {
                 this.plato[i][j] = bacteriasPorCelda;
             }
         }
     }
 
-    public void ejecutarSimulacion() {
+    public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> actualizarUI) {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
             simularDia();
             repartirComida(poblacion.getPlanAlimentacion().get(day));
             guardarResultadoDia(day);
-            System.out.println("Simulación día " + (day + 1) + " completada.");
+            actualizarUI.accept(day, plato);
         }
     }
 
-    public void simularDia() {
+    private void simularDia() {
         int[][] nuevoPlato = new int[20][20];
 
         for (int i = 0; i < 20; i++) {
@@ -57,7 +56,7 @@ public class Simulacion {
         plato = nuevoPlato;
     }
 
-    public void simularBacteria(int x, int y, int[][] nuevoPlato) {
+    private void simularBacteria(int x, int y, int[][] nuevoPlato) {
         int comidaConsumida = 0;
         for (int step = 0; step < 10; step++) {
             int comidaEnCelda = plato[x][y];
@@ -82,11 +81,10 @@ public class Simulacion {
             }
         }
         nuevoPlato[x][y]++;
-        // Reproducir bacterias según la comida consumida
         reproducirBacterias(x, y, nuevoPlato, comidaConsumida);
     }
 
-    public void moverBacteria(int x, int y, int fate, int[][] nuevoPlato) {
+    private void moverBacteria(int x, int y, int fate, int[][] nuevoPlato) {
         int newX = x, newY = y;
         if (fate >= 60 && fate < 65) newX = x - 1;
         else if (fate >= 65 && fate < 70) newX = x + 1;
@@ -100,7 +98,7 @@ public class Simulacion {
         }
     }
 
-    public void reproducirBacterias(int x, int y, int[][] nuevoPlato, int comidaConsumida) {
+    private void reproducirBacterias(int x, int y, int[][] nuevoPlato, int comidaConsumida) {
         if (comidaConsumida >= 150) {
             nuevoPlato[x][y] += 3;
         } else if (comidaConsumida >= 100) {
@@ -110,7 +108,7 @@ public class Simulacion {
         }
     }
 
-    public void repartirComida(int comidaTotal) {
+    private void repartirComida(int comidaTotal) {
         int comidaPorCelda = comidaTotal / (20 * 20);
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
@@ -119,7 +117,7 @@ public class Simulacion {
         }
     }
 
-    public void guardarResultadoDia(int day) {
+    private void guardarResultadoDia(int day) {
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
                 resultados[day][i][j] = plato[i][j];
@@ -127,20 +125,11 @@ public class Simulacion {
         }
     }
 
-    public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> actualizarUI) {
-        int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
-        for (int day = 0; day < days; day++) {
-            simularDia();
-            repartirComida(poblacion.getPlanAlimentacion().get(day));
-            guardarResultadoDia(day);
-            actualizarUI.accept(day, plato);
-        }
-    }
-
     public int[][][] getResultados() {
         return resultados;
     }
 }
+
 
 
 
