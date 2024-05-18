@@ -366,9 +366,20 @@ public class Main {
         JButton btnStopSimulation = new JButton("Detener Simulación");
         btnStopSimulation.addActionListener(e -> runningSimulation = false);
 
+        // Botón para reiniciar la simulación
+        JButton btnRestartSimulation = new JButton("Reiniciar Simulación");
+        btnRestartSimulation.addActionListener(e -> {
+            runningSimulation = false;
+            simulationGridPanel.removeAll();
+            simulationGridPanel.revalidate();
+            simulationGridPanel.repaint();
+            dayLabel.setText("Día: 0");
+        });
+
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
         buttonsPanel.add(btnStopSimulation);
+        buttonsPanel.add(btnRestartSimulation);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -380,14 +391,15 @@ public class Main {
             simulationGridPanel.removeAll();
             simulationGridPanel.revalidate();
             simulationGridPanel.repaint();
-            runningSimulation = true; // Asegurarse de que la simulación se puede ejecutar
+            runningSimulation = true;
 
             new Thread(() -> {
                 Simulacion simulacion = new Simulacion(selectedPoblacion);
+                int duracion = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
                 simulacion.ejecutarSimulacionDinamica((dia, plato) -> {
-                    if (!runningSimulation) return; // Detener la simulación si se ha pulsado el botón de detener
+                    if (!runningSimulation || dia >= duracion) return;
                     SwingUtilities.invokeLater(() -> {
-                        dayLabel.setText("Día: " + (dia + 1)); // Actualizar el JLabel del día
+                        dayLabel.setText("Día: " + (dia + 1));
                         actualizarCuadricula(plato);
                         simulationGridPanel.revalidate();
                         simulationGridPanel.repaint();

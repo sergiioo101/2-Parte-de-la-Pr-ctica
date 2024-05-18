@@ -10,6 +10,7 @@ public class Simulacion {
     private int[][][] resultadosBacterias;
     private int[][][] resultadosComida;
     private Random random = new Random();
+    private static boolean runningSimulation;
 
     public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
@@ -44,7 +45,7 @@ public class Simulacion {
     public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> callback) {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
-            if (Thread.currentThread().isInterrupted()) return; // Check if interrupted
+            if (Thread.currentThread().isInterrupted() || !runningSimulation) return; // Check if interrupted or stopped
             simularDia();
             callback.accept(day, platoBacterias);
             guardarResultadoDia(day);
