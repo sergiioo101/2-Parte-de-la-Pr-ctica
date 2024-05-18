@@ -17,7 +17,8 @@ public class Main {
     private static JPanel simulationGridPanel;
     private static final String[] LUMINOSIDAD_OPTIONS = {"Alta", "Media", "Baja"};
     private static JLabel dayLabel; // Nuevo JLabel para mostrar el día actual
-    private static volatile boolean runningSimulation;
+    private static boolean runningSimulation; // Variable para controlar la ejecución de la simulación
+    private static Thread simulacionThread; // Variable para el hilo de la simulación
 
 
     public static void main(String[] args) {
@@ -370,6 +371,9 @@ public class Main {
         JButton btnRestartSimulation = new JButton("Reiniciar Simulación");
         btnRestartSimulation.addActionListener(e -> {
             runningSimulation = false;
+            if (simulacionThread != null && simulacionThread.isAlive()) {
+                simulacionThread.interrupt();
+            }
             simulationGridPanel.removeAll();
             simulationGridPanel.revalidate();
             simulationGridPanel.repaint();
@@ -393,13 +397,16 @@ public class Main {
             simulationGridPanel.repaint();
             runningSimulation = true;
 
-            new Thread(() -> {
+            simulacionThread = new Thread(() -> {
                 Simulacion simulacion = new Simulacion(selectedPoblacion);
                 int duracion = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
-                simulacion.ejecutarSimulacionDinamica((dia, plato) -> {
-                    if (!runningSimulation || dia >= duracion) return;
+                for (int day = 0; day < duracion; day++) {
+                    if (!runningSimulation) break;
+                    simulacion.simularDia();
+                    int[][] plato = simulacion.getPlatoBacterias();
+                    int finalDay = day;
                     SwingUtilities.invokeLater(() -> {
-                        dayLabel.setText("Día: " + (dia + 1));
+                        dayLabel.setText("Día: " + (finalDay + 1)); // Actualizar el JLabel del día
                         actualizarCuadricula(plato);
                         simulationGridPanel.revalidate();
                         simulationGridPanel.repaint();
@@ -407,20 +414,23 @@ public class Main {
                     try {
                         Thread.sleep(1000); // Pausa de 1 segundo para ver los cambios día a día
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
+                        break;
                     }
-                });
+                }
 
                 if (runningSimulation) { // Solo mostrar los resultados finales si no se ha detenido la simulación
                     int[][][] resultadosBacterias = simulacion.getResultadosBacterias();
                     int[][][] resultadosComida = simulacion.getResultadosComida();
                     mostrarResultadosFinales(resultadosBacterias, resultadosComida);
                 }
-            }).start();
+            });
+            simulacionThread.start();
         } else {
             JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private static void actualizarCuadricula(int[][] plato) {
         simulationGridPanel.removeAll();

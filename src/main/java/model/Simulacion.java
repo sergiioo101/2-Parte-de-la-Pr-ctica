@@ -7,10 +7,9 @@ public class Simulacion {
     private Poblacion poblacion;
     private int[][] platoBacterias;
     private int[][] platoComida;
-    private int[][][] resultadosBacterias;
-    private int[][][] resultadosComida;
+    private int[][][] resultadosBacterias; // Matriz tridimensional para bacterias
+    private int[][][] resultadosComida; // Matriz tridimensional para comida
     private Random random = new Random();
-    private static boolean runningSimulation;
 
     public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
@@ -25,7 +24,7 @@ public class Simulacion {
     private void inicializarPlato() {
         int centro = 10;
         int tamanoSubcuadro = 4;
-        int bacteriasPorCelda = poblacion.getNumBacterias() / (tamanoSubcuadro * tamanoSubcuadro);
+        int bacteriasPorCelda = Math.max(1, poblacion.getNumBacterias() / (tamanoSubcuadro * tamanoSubcuadro)); // Asegurar al menos 1 bacteria por celda
 
         for (int i = centro - 2; i < centro + 2; i++) {
             for (int j = centro - 2; j < centro + 2; j++) {
@@ -33,59 +32,45 @@ public class Simulacion {
             }
         }
 
-        int comidaTotal = poblacion.getComidaInicial();
-        int comidaPorCelda = comidaTotal / (20 * 20);
+        int comidaInicial = poblacion.getComidaInicial() / (20 * 20);
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                this.platoComida[i][j] = comidaPorCelda;
+                this.platoComida[i][j] = comidaInicial;
             }
         }
     }
 
-    public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> callback) {
-        int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
-        for (int day = 0; day < days; day++) {
-            if (Thread.currentThread().isInterrupted() || !runningSimulation) return; // Check if interrupted or stopped
-            simularDia();
-            callback.accept(day, platoBacterias);
-            guardarResultadoDia(day);
-            repartirComida(poblacion.getPlanAlimentacion().get(day));
-        }
-    }
-
-    private void simularDia() {
+    public void simularDia() {
         int[][] nuevoPlatoBacterias = new int[20][20];
         int[][] nuevoPlatoComida = new int[20][20];
 
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
                 int bacterias = platoBacterias[i][j];
-                int comidaEnCelda = platoComida[i][j];
+                int comida = platoComida[i][j];
                 for (int k = 0; k < bacterias; k++) {
-                    simularBacteria(i, j, nuevoPlatoBacterias, nuevoPlatoComida);
+                    simularBacteria(i, j, nuevoPlatoBacterias, nuevoPlatoComida, comida);
                 }
             }
         }
 
         platoBacterias = nuevoPlatoBacterias;
         platoComida = nuevoPlatoComida;
+        repartirComida(poblacion.getComidaFinal());
     }
 
-    private void simularBacteria(int x, int y, int[][] nuevoPlatoBacterias, int[][] nuevoPlatoComida) {
+    private void simularBacteria(int x, int y, int[][] nuevoPlatoBacterias, int[][] nuevoPlatoComida, int comidaEnCelda) {
         int comidaConsumida = 0;
         for (int step = 0; step < 10; step++) {
-            int comidaEnCelda = platoComida[x][y];
             if (comidaEnCelda >= 100) {
                 comidaEnCelda -= 20;
                 comidaConsumida += 20;
-                platoComida[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 3) return; // Muere
                 else if (fate >= 60 && fate < 100) moverBacteria(x, y, fate, nuevoPlatoBacterias);
             } else if (comidaEnCelda >= 10) {
                 comidaEnCelda -= 10;
                 comidaConsumida += 10;
-                platoComida[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 6) return; // Muere
                 else if (fate >= 20 && fate < 100) moverBacteria(x, y, fate, nuevoPlatoBacterias);
@@ -148,7 +133,12 @@ public class Simulacion {
     public int[][][] getResultadosComida() {
         return resultadosComida;
     }
+
+    public int[][] getPlatoBacterias() {
+        return platoBacterias;
+    }
 }
+
 
 
 
