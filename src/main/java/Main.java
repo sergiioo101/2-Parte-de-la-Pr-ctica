@@ -17,6 +17,7 @@ public class Main {
     private static JPanel simulationGridPanel;
     private static final String[] LUMINOSIDAD_OPTIONS = {"Alta", "Media", "Baja"};
     private static JLabel dayLabel; // Nuevo JLabel para mostrar el día actual
+    private static volatile boolean runningSimulation;
 
 
     public static void main(String[] args) {
@@ -117,7 +118,6 @@ public class Main {
         buttonsPanel.add(btnAdd);
         buttonsPanel.add(btnEdit);
         buttonsPanel.add(btnRemove);
-        panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         // Añadir JComboBox y botón para ordenación
         String[] sortOptions = {"Nombre", "Fecha de Inicio", "Número de Bacterias"};
@@ -144,6 +144,8 @@ public class Main {
 
         buttonsPanel.add(sortComboBox);
         buttonsPanel.add(btnSort);
+
+        panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -360,8 +362,13 @@ public class Main {
         JButton btnRunSimulation = new JButton("Ejecutar Simulación");
         btnRunSimulation.addActionListener(e -> runSimulation());
 
+        // Botón para detener la simulación
+        JButton btnStopSimulation = new JButton("Detener Simulación");
+        btnStopSimulation.addActionListener(e -> runningSimulation = false);
+
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
+        buttonsPanel.add(btnStopSimulation);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -373,10 +380,12 @@ public class Main {
             simulationGridPanel.removeAll();
             simulationGridPanel.revalidate();
             simulationGridPanel.repaint();
+            runningSimulation = true; // Asegurarse de que la simulación se puede ejecutar
 
             new Thread(() -> {
                 Simulacion simulacion = new Simulacion(selectedPoblacion);
                 simulacion.ejecutarSimulacionDinamica((dia, plato) -> {
+                    if (!runningSimulation) return; // Detener la simulación si se ha pulsado el botón de detener
                     SwingUtilities.invokeLater(() -> {
                         dayLabel.setText("Día: " + (dia + 1)); // Actualizar el JLabel del día
                         actualizarCuadricula(plato);
@@ -390,10 +399,11 @@ public class Main {
                     }
                 });
 
-                // Mostrar los resultados finales después de la simulación
-                int[][][] resultadosBacterias = simulacion.getResultadosBacterias();
-                int[][][] resultadosComida = simulacion.getResultadosComida();
-                mostrarResultadosFinales(resultadosBacterias, resultadosComida);
+                if (runningSimulation) { // Solo mostrar los resultados finales si no se ha detenido la simulación
+                    int[][][] resultadosBacterias = simulacion.getResultadosBacterias();
+                    int[][][] resultadosComida = simulacion.getResultadosComida();
+                    mostrarResultadosFinales(resultadosBacterias, resultadosComida);
+                }
             }).start();
         } else {
             JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);

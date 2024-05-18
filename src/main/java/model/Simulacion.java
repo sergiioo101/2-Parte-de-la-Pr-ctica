@@ -1,20 +1,17 @@
 package model;
 
 import java.util.Random;
-import java.util.function.BiConsumer;
 
 public class Simulacion {
     private Poblacion poblacion;
-    private int[][] platoBacterias;
-    private int[][] platoComida;
-    private int[][][] resultadosBacterias;
-    private int[][][] resultadosComida;
+    private int[][] plato;
+    private int[][][] resultadosBacterias; // Matriz tridimensional para almacenar el número de bacterias por día
+    private int[][][] resultadosComida; // Matriz tridimensional para almacenar la comida restante por día
     private Random random = new Random();
 
     public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
-        this.platoBacterias = new int[20][20];
-        this.platoComida = new int[20][20];
+        this.plato = new int[20][20];
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         this.resultadosBacterias = new int[days][20][20];
         this.resultadosComida = new int[days][20][20];
@@ -22,24 +19,24 @@ public class Simulacion {
     }
 
     private void inicializarPlato() {
-        int centro = 8;
+        int centro = 10;
         int tamanoSubcuadro = 4;
         int bacteriasPorCelda = poblacion.getNumBacterias() / (tamanoSubcuadro * tamanoSubcuadro);
 
-        for (int i = centro; i < centro + tamanoSubcuadro; i++) {
-            for (int j = centro; j < centro + tamanoSubcuadro; j++) {
-                this.platoBacterias[i][j] = bacteriasPorCelda;
+        for (int i = centro - 2; i < centro + 2; i++) {
+            for (int j = centro - 2; j < centro + 2; j++) {
+                this.plato[i][j] = bacteriasPorCelda;
             }
         }
     }
 
-    public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> actualizarUI) {
+    public void ejecutarSimulacionDinamica(java.util.function.BiConsumer<Integer, int[][]> callback) {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
-            repartirComida(poblacion.getPlanAlimentacion().get(day));
             simularDia();
+            repartirComida(poblacion.getPlanAlimentacion().get(day));
             guardarResultadoDia(day);
-            actualizarUI.accept(day, platoBacterias);
+            callback.accept(day, plato);
         }
     }
 
@@ -48,7 +45,7 @@ public class Simulacion {
 
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                int bacterias = platoBacterias[i][j];
+                int bacterias = plato[i][j];
                 if (bacterias > 0) {
                     for (int k = 0; k < bacterias; k++) {
                         simularBacteria(i, j, nuevoPlato);
@@ -57,24 +54,24 @@ public class Simulacion {
             }
         }
 
-        platoBacterias = nuevoPlato;
+        plato = nuevoPlato;
     }
 
     private void simularBacteria(int x, int y, int[][] nuevoPlato) {
         int comidaConsumida = 0;
         for (int step = 0; step < 10; step++) {
-            int comidaEnCelda = platoComida[x][y];
+            int comidaEnCelda = plato[x][y];
             if (comidaEnCelda >= 100) {
                 comidaEnCelda -= 20;
                 comidaConsumida += 20;
-                platoComida[x][y] = comidaEnCelda;
+                plato[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 3) return; // Muere
                 else if (fate >= 60 && fate < 100) moverBacteria(x, y, fate, nuevoPlato);
             } else if (comidaEnCelda >= 10) {
                 comidaEnCelda -= 10;
                 comidaConsumida += 10;
-                platoComida[x][y] = comidaEnCelda;
+                plato[x][y] = comidaEnCelda;
                 int fate = random.nextInt(100);
                 if (fate < 6) return; // Muere
                 else if (fate >= 20 && fate < 100) moverBacteria(x, y, fate, nuevoPlato);
@@ -116,7 +113,7 @@ public class Simulacion {
         int comidaPorCelda = comidaTotal / (20 * 20);
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                platoComida[i][j] = comidaPorCelda;
+                plato[i][j] += comidaPorCelda;
             }
         }
     }
@@ -124,8 +121,8 @@ public class Simulacion {
     private void guardarResultadoDia(int day) {
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                resultadosBacterias[day][i][j] = platoBacterias[i][j];
-                resultadosComida[day][i][j] = platoComida[i][j];
+                resultadosBacterias[day][i][j] = plato[i][j];
+                resultadosComida[day][i][j] = plato[i][j]; // Asume que la comida es lo mismo que la cantidad de bacterias en este contexto
             }
         }
     }
@@ -138,6 +135,7 @@ public class Simulacion {
         return resultadosComida;
     }
 }
+
 
 
 
