@@ -308,12 +308,13 @@ public class Main {
 
     private static void mostrarResultadosSimulacion(int[][][] resultados) {
         for (int day = 0; day < resultados.length; day++) {
+            int[][] plato = resultados[day];
             JPanel panel = new JPanel(new GridLayout(20, 20));
             for (int i = 0; i < 20; i++) {
                 for (int j = 0; j < 20; j++) {
                     JLabel label = new JLabel();
                     label.setOpaque(true);
-                    int bacterias = resultados[day][i][j];
+                    int bacterias = plato[i][j];
                     if (bacterias >= 20) label.setBackground(Color.RED);
                     else if (bacterias >= 15) label.setBackground(Color.MAGENTA);
                     else if (bacterias >= 10) label.setBackground(Color.ORANGE);

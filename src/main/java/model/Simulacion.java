@@ -11,7 +11,8 @@ public class Simulacion {
     public Simulacion(Poblacion poblacion) {
         this.poblacion = poblacion;
         this.plato = new int[20][20];
-        this.resultados = new int[poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1][20][20];
+        int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
+        this.resultados = new int[days][20][20];
         inicializarPlato();
     }
 
@@ -127,6 +128,7 @@ public class Simulacion {
         return resultados;
     }
 }
+
 
 
 
