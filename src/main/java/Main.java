@@ -332,77 +332,86 @@ public class Main {
 
     private static JPanel createSimulationPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        JTextArea simulationDetails = new JTextArea();
-        simulationDetails.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(simulationDetails);
+
+        simulationGridPanel = new JPanel(new GridLayout(20, 20)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setColor(Color.BLACK);
+                for (int i = 0; i < getWidth(); i += getWidth() / 20) {
+                    for (int j = 0; j < getHeight(); j += getHeight() / 20) {
+                        g2.drawRect(i, j, getWidth() / 20, getHeight() / 20);
+                    }
+                }
+            }
+        };
+
+        panel.add(simulationGridPanel, BorderLayout.CENTER);
 
         JButton btnRunSimulation = new JButton("Ejecutar Simulación");
 
-        btnRunSimulation.addActionListener(e -> runSimulation(simulationDetails));
+        btnRunSimulation.addActionListener(e -> runSimulation());
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
-        panel.add(scrollPane, BorderLayout.NORTH);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        simulationGridPanel = new JPanel(new GridLayout(20, 20));
-        panel.add(simulationGridPanel, BorderLayout.CENTER);
 
         return panel;
     }
 
-    private static void runSimulation(JTextArea simulationDetails) {
+    private static void runSimulation() {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
-            simulationDetails.setText(""); // Clear previous results
-            SwingWorker<Void, int[][]> worker = new SwingWorker<Void, int[][]>() {
-                private Simulacion simulacion; // Definir simulacion aquí
+            simulationGridPanel.removeAll();
+            simulationGridPanel.revalidate();
+            simulationGridPanel.repaint();
 
-                @Override
-                protected Void doInBackground() {
-                    simulacion = new Simulacion(selectedPoblacion);
-                    int days = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
-
-                    for (int day = 0; day < days; day++) {
-                        simulacion.simularDia();
-                        simulacion.repartirComida(selectedPoblacion.getPlanAlimentacion().get(day));
-                        simulacion.guardarResultadoDia(day);
-                        publish(simulacion.getResultados()[day]);
-                        try {
-                            Thread.sleep(100); // Pausa para visualizar cambios en tiempo real
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    return null;
-                }
-
-                @Override
-                protected void process(List<int[][]> chunks) {
-                    if (!chunks.isEmpty()) {
-                        int[][] ultimoResultado = chunks.get(chunks.size() - 1);
-                        mostrarCuadriculaSimulacion(ultimoResultado);
-                    }
-                }
-
-                @Override
-                protected void done() {
+            new Thread(() -> {
+                Simulacion simulacion = new Simulacion(selectedPoblacion);
+                simulacion.ejecutarSimulacionDinamica((dia, plato) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        actualizarCuadricula(plato);
+                        simulationGridPanel.revalidate();
+                        simulationGridPanel.repaint();
+                    });
                     try {
-                        simulationDetails.append(getPopulationDetails(selectedPoblacion));
-                        simulationDetails.append("\nResultados de la simulación:\n");
-                        // Llamar a mostrarResultadosSimulacion con la lista de resultados
-                        mostrarResultadosSimulacion(simulacion.getResultados());
-                    } catch (Exception e) {
+                        Thread.sleep(1000); // Pausa de 1 segundo para ver los cambios día a día
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                }
-            };
-            worker.execute();
+                });
+            }).start();
         } else {
             JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    private static void actualizarCuadricula(int[][] plato) {
+        simulationGridPanel.removeAll();
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                JLabel cell = new JLabel();
+                cell.setOpaque(true);
+                int bacterias = plato[i][j];
+                if (bacterias >= 20) {
+                    cell.setBackground(Color.RED);
+                } else if (bacterias >= 15) {
+                    cell.setBackground(Color.MAGENTA);
+                } else if (bacterias >= 10) {
+                    cell.setBackground(Color.ORANGE);
+                } else if (bacterias >= 5) {
+                    cell.setBackground(Color.YELLOW);
+                } else if (bacterias >= 1) {
+                    cell.setBackground(Color.GREEN);
+                } else {
+                    cell.setBackground(Color.WHITE);
+                }
+                cell.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                simulationGridPanel.add(cell);
+            }
+        }
+    }
 
     private static void mostrarResultadosSimulacion(int[][][] resultados) {
         for (int day = 0; day < resultados.length; day++) {

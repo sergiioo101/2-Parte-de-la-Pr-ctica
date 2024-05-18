@@ -1,6 +1,8 @@
 package model;
 
 import java.util.Random;
+import java.util.function.BiConsumer;
+
 
 public class Simulacion {
     private Poblacion poblacion;
@@ -122,6 +124,16 @@ public class Simulacion {
             for (int j = 0; j < 20; j++) {
                 resultados[day][i][j] = plato[i][j];
             }
+        }
+    }
+
+    public void ejecutarSimulacionDinamica(BiConsumer<Integer, int[][]> actualizarUI) {
+        int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
+        for (int day = 0; day < days; day++) {
+            simularDia();
+            repartirComida(poblacion.getPlanAlimentacion().get(day));
+            guardarResultadoDia(day);
+            actualizarUI.accept(day, plato);
         }
     }
 
