@@ -7,8 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class Main {
@@ -16,9 +14,8 @@ public class Main {
     private static JFrame frame;
     private static JList<String> listPoblaciones; // Lista para mostrar nombres de poblaciones
     private static DefaultListModel<String> listModel; // Modelo de datos para la lista
-    private static JTextArea simulationDetails; // Área de texto para mostrar resultados de la simulación
+    private static JPanel simulationGridPanel;
     private static final String[] LUMINOSIDAD_OPTIONS = {"Alta", "Media", "Baja"};
-    private static JPanel simulationGridPanel; // Panel para la cuadrícula de simulación
 
     public static void main(String[] args) {
         // Mensaje de bienvenida
@@ -29,7 +26,7 @@ public class Main {
     private static void createAndShowGUI() {
         frame = new JFrame("Gestión de Experimentos de Cultivo de Bacterias");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 800);
+        frame.setSize(800, 600);
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -108,25 +105,25 @@ public class Main {
 
         JPanel buttonsPanel = new JPanel();
         JButton btnAdd = new JButton("Añadir Población");
-        JButton btnRemove = new JButton("Eliminar Población");
         JButton btnEdit = new JButton("Editar Población");
+        JButton btnRemove = new JButton("Eliminar Población");
         JButton btnSortByName = new JButton("Ordenar por Nombre");
         JButton btnSortByDate = new JButton("Ordenar por Fecha");
-        JButton btnSortByBacteriaCount = new JButton("Ordenar por Nº de Bacterias");
+        JButton btnSortByNumBacterias = new JButton("Ordenar por Número de Bacterias");
 
         btnAdd.addActionListener(e -> addPopulation());
-        btnRemove.addActionListener(e -> removePopulation());
         btnEdit.addActionListener(e -> editPopulation());
+        btnRemove.addActionListener(e -> removePopulation());
         btnSortByName.addActionListener(e -> sortPoblacionesByName());
         btnSortByDate.addActionListener(e -> sortPoblacionesByDate());
-        btnSortByBacteriaCount.addActionListener(e -> sortPoblacionesByBacteriaCount());
+        btnSortByNumBacterias.addActionListener(e -> sortPoblacionesByNumBacterias());
 
         buttonsPanel.add(btnAdd);
-        buttonsPanel.add(btnRemove);
         buttonsPanel.add(btnEdit);
+        buttonsPanel.add(btnRemove);
         buttonsPanel.add(btnSortByName);
         buttonsPanel.add(btnSortByDate);
-        buttonsPanel.add(btnSortByBacteriaCount);
+        buttonsPanel.add(btnSortByNumBacterias);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
@@ -147,7 +144,7 @@ public class Main {
 
         panel.add(new JLabel("Nombre:"));
         panel.add(nameField);
-        panel.add(new JLabel("Número de Días (máximo 30):"));
+        panel.add(new JLabel("Número de Días (variable):"));
         panel.add(numDaysField);
         panel.add(new JLabel("Número de Bacterias:"));
         panel.add(numBacteriasField);
@@ -196,69 +193,79 @@ public class Main {
         String selected = listPoblaciones.getSelectedValue();
         if (selected != null) {
             Poblacion poblacion = currentExperiment.getPoblacion(selected);
-            if (poblacion != null) {
-                JPanel panel = new JPanel(new GridLayout(0, 2));
-                JTextField nameField = new JTextField(poblacion.getNombre());
-                JTextField numDaysField = new JTextField(String.valueOf(poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1));
-                JTextField numBacteriasField = new JTextField(String.valueOf(poblacion.getNumBacterias()));
-                JTextField temperaturaField = new JTextField(String.valueOf(poblacion.getTemperatura()));
-                JComboBox<String> luminosidadComboBox = new JComboBox<>(LUMINOSIDAD_OPTIONS);
-                luminosidadComboBox.setSelectedItem(poblacion.getLuminosidad());
-                JTextField comidaInicialField = new JTextField(String.valueOf(poblacion.getComidaInicial()));
-                JTextField comidaFinalField = new JTextField(String.valueOf(poblacion.getComidaFinal()));
-                JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"linear", "constant", "alternating"});
-                tipoAlimentacionComboBox.setSelectedItem(poblacion.getTipoAlimentacion());
-                JTextField diaIncrementoField = new JTextField(String.valueOf(poblacion.getDiaIncremento()));
-                JTextField comidaMaximaField = new JTextField(String.valueOf(poblacion.getComidaMaxima()));
 
-                panel.add(new JLabel("Nombre:"));
-                panel.add(nameField);
-                panel.add(new JLabel("Número de Días (máximo 30):"));
-                panel.add(numDaysField);
-                panel.add(new JLabel("Número de Bacterias:"));
-                panel.add(numBacteriasField);
-                panel.add(new JLabel("Temperatura:"));
-                panel.add(temperaturaField);
-                panel.add(new JLabel("Luminosidad:"));
-                panel.add(luminosidadComboBox);
-                panel.add(new JLabel("Comida Inicial (en microgramos):"));
-                panel.add(comidaInicialField);
-                panel.add(new JLabel("Comida Final (en microgramos):"));
-                panel.add(comidaFinalField);
-                panel.add(new JLabel("Tipo de Alimentación:"));
-                panel.add(tipoAlimentacionComboBox);
-                panel.add(new JLabel("Día de Incremento:"));
-                panel.add(diaIncrementoField);
-                panel.add(new JLabel("Comida Máxima:"));
-                panel.add(comidaMaximaField);
+            JPanel panel = new JPanel(new GridLayout(0, 2));
+            JTextField nameField = new JTextField(poblacion.getNombre());
+            JTextField numDaysField = new JTextField(String.valueOf(poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays()));
+            JTextField numBacteriasField = new JTextField(String.valueOf(poblacion.getNumBacterias()));
+            JTextField temperaturaField = new JTextField(String.valueOf(poblacion.getTemperatura()));
+            JComboBox<String> luminosidadComboBox = new JComboBox<>(LUMINOSIDAD_OPTIONS);
+            luminosidadComboBox.setSelectedItem(poblacion.getLuminosidad());
+            JTextField comidaInicialField = new JTextField(String.valueOf(poblacion.getComidaInicial()));
+            JTextField comidaFinalField = new JTextField(String.valueOf(poblacion.getComidaFinal()));
+            JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"linear", "constant", "alternating"});
+            tipoAlimentacionComboBox.setSelectedItem(poblacion.getTipoAlimentacion());
+            JTextField diaIncrementoField = new JTextField(String.valueOf(poblacion.getDiaIncremento()));
+            JTextField comidaMaximaField = new JTextField(String.valueOf(poblacion.getComidaMaxima()));
 
-                int result = JOptionPane.showConfirmDialog(frame, panel, "Editar Población", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (result == JOptionPane.OK_OPTION) {
-                    try {
-                        String nombre = nameField.getText();
-                        LocalDate fechaInicio = poblacion.getFechaInicio();
-                        int numDias = Integer.parseInt(numDaysField.getText());
-                        LocalDate fechaFin = fechaInicio.plusDays(numDias);
-                        int numBacterias = Integer.parseInt(numBacteriasField.getText());
-                        double temperatura = Double.parseDouble(temperaturaField.getText());
-                        String luminosidad = luminosidadComboBox.getSelectedItem().toString();
-                        int comidaInicial = Integer.parseInt(comidaInicialField.getText());
-                        int comidaFinal = Integer.parseInt(comidaFinalField.getText());
-                        String tipoAlimentacion = tipoAlimentacionComboBox.getSelectedItem().toString();
-                        int diaIncremento = Integer.parseInt(diaIncrementoField.getText());
-                        int comidaMaxima = Integer.parseInt(comidaMaximaField.getText());
+            panel.add(new JLabel("Nombre:"));
+            panel.add(nameField);
+            panel.add(new JLabel("Número de Días (variable):"));
+            panel.add(numDaysField);
+            panel.add(new JLabel("Número de Bacterias:"));
+            panel.add(numBacteriasField);
+            panel.add(new JLabel("Temperatura:"));
+            panel.add(temperaturaField);
+            panel.add(new JLabel("Luminosidad:"));
+            panel.add(luminosidadComboBox);
+            panel.add(new JLabel("Comida Inicial (en microgramos):"));
+            panel.add(comidaInicialField);
+            panel.add(new JLabel("Comida Final (en microgramos):"));
+            panel.add(comidaFinalField);
+            panel.add(new JLabel("Tipo de Alimentación:"));
+            panel.add(tipoAlimentacionComboBox);
+            panel.add(new JLabel("Día de Incremento:"));
+            panel.add(diaIncrementoField);
+            panel.add(new JLabel("Comida Máxima:"));
+            panel.add(comidaMaximaField);
 
-                        Poblacion editadaPoblacion = new Poblacion(nombre, fechaInicio, fechaFin, numBacterias, temperatura, luminosidad, comidaInicial, comidaFinal, diaIncremento, comidaMaxima, tipoAlimentacion);
-                        currentExperiment.getPoblaciones().set(currentExperiment.getPoblaciones().indexOf(poblacion), editadaPoblacion);
-                        updatePoblacionesList();
-                        JOptionPane.showMessageDialog(frame, "Población editada correctamente.");
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(frame, "Por favor, introduzca números válidos en los campos numéricos.", "Error de Número", JOptionPane.ERROR_MESSAGE);
-                    }
+            int result = JOptionPane.showConfirmDialog(frame, panel, "Editar Población", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    String nombre = nameField.getText();
+                    LocalDate fechaInicio = poblacion.getFechaInicio();
+                    int numDias = Integer.parseInt(numDaysField.getText());
+                    LocalDate fechaFin = fechaInicio.plusDays(numDias);
+                    int numBacterias = Integer.parseInt(numBacteriasField.getText());
+                    double temperatura = Double.parseDouble(temperaturaField.getText());
+                    String luminosidad = luminosidadComboBox.getSelectedItem().toString();
+                    int comidaInicial = Integer.parseInt(comidaInicialField.getText());
+                    int comidaFinal = Integer.parseInt(comidaFinalField.getText());
+                    String tipoAlimentacion = tipoAlimentacionComboBox.getSelectedItem().toString();
+                    int diaIncremento = Integer.parseInt(diaIncrementoField.getText());
+                    int comidaMaxima = Integer.parseInt(comidaMaximaField.getText());
+
+                    // Aquí cambiamos los setters de la población para actualizar sus valores
+                    poblacion.setNombre(nombre);
+                    poblacion.setFechaFin(fechaFin);
+                    poblacion.setNumBacterias(numBacterias);
+                    poblacion.setTemperatura(temperatura);
+                    poblacion.setLuminosidad(luminosidad);
+                    poblacion.setComidaInicial(comidaInicial);
+                    poblacion.setComidaFinal(comidaFinal);
+                    poblacion.setDiaIncremento(diaIncremento);
+                    poblacion.setComidaMaxima(comidaMaxima);
+                    poblacion.setTipoAlimentacion(tipoAlimentacion);
+                    poblacion.generarPlanAlimentacion(); // Generamos el plan de alimentación de nuevo
+
+                    updatePoblacionesList();
+                    JOptionPane.showMessageDialog(frame, "Población editada correctamente.");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Por favor, introduzca números válidos en los campos numéricos.", "Error de Número", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(frame, "Seleccione una población para editar.");
+            JOptionPane.showMessageDialog(frame, "Seleccione una población para editar.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -273,6 +280,24 @@ public class Main {
         }
     }
 
+    private static void sortPoblacionesByName() {
+        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
+        poblaciones.sort((p1, p2) -> p1.getNombre().compareTo(p2.getNombre()));
+        updatePoblacionesList(poblaciones);
+    }
+
+    private static void sortPoblacionesByDate() {
+        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
+        poblaciones.sort((p1, p2) -> p1.getFechaInicio().compareTo(p2.getFechaInicio()));
+        updatePoblacionesList(poblaciones);
+    }
+
+    private static void sortPoblacionesByNumBacterias() {
+        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
+        poblaciones.sort((p1, p2) -> Integer.compare(p1.getNumBacterias(), p2.getNumBacterias()));
+        updatePoblacionesList(poblaciones);
+    }
+
     private static void updatePoblacionesList() {
         listModel.clear();
         if (currentExperiment != null && currentExperiment.getPoblaciones() != null) {
@@ -282,22 +307,11 @@ public class Main {
         }
     }
 
-    private static void sortPoblacionesByName() {
-        List<Poblacion> poblaciones = currentExperiment.getPoblaciones();
-        Collections.sort(poblaciones, Comparator.comparing(Poblacion::getNombre));
-        updatePoblacionesList();
-    }
-
-    private static void sortPoblacionesByDate() {
-        List<Poblacion> poblaciones = currentExperiment.getPoblaciones();
-        Collections.sort(poblaciones, Comparator.comparing(Poblacion::getFechaInicio));
-        updatePoblacionesList();
-    }
-
-    private static void sortPoblacionesByBacteriaCount() {
-        List<Poblacion> poblaciones = currentExperiment.getPoblaciones();
-        Collections.sort(poblaciones, Comparator.comparingInt(Poblacion::getNumBacterias));
-        updatePoblacionesList();
+    private static void updatePoblacionesList(List<Poblacion> poblaciones) {
+        listModel.clear();
+        for (Poblacion p : poblaciones) {
+            listModel.addElement(p.getNombre());
+        }
     }
 
     private static JPanel createDetailsPanel() {
@@ -327,13 +341,13 @@ public class Main {
 
     private static JPanel createSimulationPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        simulationDetails = new JTextArea();
+        JTextArea simulationDetails = new JTextArea();
         simulationDetails.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(simulationDetails);
 
         JButton btnRunSimulation = new JButton("Ejecutar Simulación");
 
-        btnRunSimulation.addActionListener(e -> runSimulation());
+        btnRunSimulation.addActionListener(e -> runSimulation(simulationDetails));
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
@@ -346,14 +360,10 @@ public class Main {
         return panel;
     }
 
-    private static void runSimulation() {
+    private static void runSimulation(JTextArea simulationDetails) {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
             simulationDetails.setText(""); // Clear previous results
-            simulationGridPanel.removeAll(); // Clear previous grid
-            simulationGridPanel.revalidate();
-            simulationGridPanel.repaint();
-
             SwingWorker<int[][][], Void> worker = new SwingWorker<int[][][], Void>() {
                 @Override
                 protected int[][][] doInBackground() {
@@ -368,7 +378,8 @@ public class Main {
                         int[][][] resultados = get();
                         simulationDetails.append(getPopulationDetails(selectedPoblacion));
                         simulationDetails.append("\nResultados de la simulación:\n");
-                        mostrarResultadosSimulacion(resultados);
+                        mostrarResultadosSimulacion(resultados, simulationDetails);
+                        mostrarCuadriculaSimulacion(resultados);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -380,7 +391,7 @@ public class Main {
         }
     }
 
-    private static void mostrarResultadosSimulacion(int[][][] resultados) {
+    private static void mostrarResultadosSimulacion(int[][][] resultados, JTextArea simulationDetails) {
         for (int day = 0; day < resultados.length; day++) {
             int[][] plato = resultados[day];
             simulationDetails.append("Día " + (day + 1) + ":\n");
@@ -391,28 +402,25 @@ public class Main {
                 simulationDetails.append("\n");
             }
             simulationDetails.append("\n");
-
-            // Actualizar la cuadrícula
-            updateSimulationGrid(plato);
         }
     }
 
-    private static void updateSimulationGrid(int[][] plato) {
+    private static void mostrarCuadriculaSimulacion(int[][][] resultados) {
         simulationGridPanel.removeAll();
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
-                JPanel cell = new JPanel();
-                cell.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-                int bacteriaCount = plato[i][j];
-                if (bacteriaCount >= 20) {
+                JLabel cell = new JLabel();
+                cell.setOpaque(true);
+                int bacterias = resultados[resultados.length - 1][i][j]; // Mostramos el último día
+                if (bacterias >= 20) {
                     cell.setBackground(Color.RED);
-                } else if (bacteriaCount >= 15) {
+                } else if (bacterias >= 15) {
                     cell.setBackground(Color.MAGENTA);
-                } else if (bacteriaCount >= 10) {
+                } else if (bacterias >= 10) {
                     cell.setBackground(Color.ORANGE);
-                } else if (bacteriaCount >= 5) {
+                } else if (bacterias >= 5) {
                     cell.setBackground(Color.YELLOW);
-                } else if (bacteriaCount >= 1) {
+                } else if (bacterias >= 1) {
                     cell.setBackground(Color.GREEN);
                 } else {
                     cell.setBackground(Color.WHITE);
@@ -436,7 +444,7 @@ public class Main {
         details.append("Comida Inicial: ").append(poblacion.getComidaInicial()).append("\n");
         details.append("Día de Incremento Máximo: ").append(poblacion.getDiaIncremento()).append("\n");
         details.append("Comida Máxima en el Día de Incremento: ").append(poblacion.getComidaMaxima()).append("\n");
-        details.append("Comida Final en Día 30: ").append(poblacion.getComidaFinal()).append("\n");
+        details.append("Comida Final: ").append(poblacion.getComidaFinal()).append("\n");
         details.append("\n");
 
         details.append("Cálculo estimado de la cantidad de comida por día:\n");
@@ -455,11 +463,6 @@ public class Main {
         int comidaFinal = poblacion.getComidaFinal();
         int numDias = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
 
-        // Asegurarse de que la duración de la población no supere los 30 días
-        if (numDias > 30) {
-            numDias = 30;
-        }
-
         for (int dia = 1; dia <= numDias; dia++) {
             int comidaDia;
             if (dia <= diaIncremento) {
@@ -468,7 +471,7 @@ public class Main {
                 comidaDia = (int) (comidaInicial + (dia - 1) * incrementoDiario);
             } else {
                 // Después del día de incremento máximo, la comida disminuye gradualmente hasta la comida final en el último día
-                double decrementoDiario = (double) (comidaMaxima - comidaFinal) / (30 - diaIncremento);
+                double decrementoDiario = (double) (comidaMaxima - comidaFinal) / (numDias - diaIncremento);
                 comidaDia = (int) (comidaMaxima - (dia - diaIncremento) * decrementoDiario);
             }
             comidaPorDia.add(comidaDia);
@@ -476,6 +479,9 @@ public class Main {
         return comidaPorDia;
     }
 }
+
+
+
 
 
 

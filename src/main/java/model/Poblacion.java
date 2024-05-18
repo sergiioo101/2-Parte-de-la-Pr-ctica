@@ -38,7 +38,7 @@ public class Poblacion implements Serializable {
         generarPlanAlimentacion();
     }
 
-    private void generarPlanAlimentacion() {
+    public void generarPlanAlimentacion() {
         int days = fechaInicio.until(fechaFin).getDays() + 1;
         switch (tipoAlimentacion.toLowerCase()) {
             case "linear":
@@ -80,7 +80,22 @@ public class Poblacion implements Serializable {
     public int getComidaMaxima() { return comidaMaxima; }
     public String getTipoAlimentacion() { return tipoAlimentacion; }
     public List<Integer> getPlanAlimentacion() { return planAlimentacion; }
+
+    // Setters
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setFechaInicio(LocalDate fechaInicio) { this.fechaInicio = fechaInicio; }
+    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
+    public void setNumBacterias(int numBacterias) { this.numBacterias = numBacterias; }
+    public void setTemperatura(double temperatura) { this.temperatura = temperatura; }
+    public void setLuminosidad(String luminosidad) { this.luminosidad = luminosidad; }
+    public void setComidaInicial(int comidaInicial) { this.comidaInicial = comidaInicial; }
+    public void setComidaFinal(int comidaFinal) { this.comidaFinal = comidaFinal; }
+    public void setDiaIncremento(int diaIncremento) { this.diaIncremento = diaIncremento; }
+    public void setComidaMaxima(int comidaMaxima) { this.comidaMaxima = comidaMaxima; }
+    public void setTipoAlimentacion(String tipoAlimentacion) { this.tipoAlimentacion = tipoAlimentacion; }
 }
+
+
 
 
 
