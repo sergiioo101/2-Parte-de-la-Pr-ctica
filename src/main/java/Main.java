@@ -402,7 +402,7 @@ public class Main {
                 int duracion = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
                 for (int day = 0; day < duracion; day++) {
                     if (!runningSimulation) break;
-                    simulacion.simularDia();
+                    simulacion.simularDia(day); // Pasar el día actual
                     int[][] plato = simulacion.getPlatoBacterias();
                     int finalDay = day;
                     SwingUtilities.invokeLater(() -> {
@@ -417,12 +417,6 @@ public class Main {
                         Thread.currentThread().interrupt();
                         break;
                     }
-                }
-
-                if (runningSimulation) { // Solo mostrar los resultados finales si no se ha detenido la simulación
-                    int[][][] resultadosBacterias = simulacion.getResultadosBacterias();
-                    int[][][] resultadosComida = simulacion.getResultadosComida();
-                    mostrarResultadosFinales(resultadosBacterias, resultadosComida);
                 }
             });
             simulacionThread.start();
@@ -531,6 +525,7 @@ public class Main {
         JOptionPane.showMessageDialog(frame, new JScrollPane(resultsArea), "Resultados de la Simulación", JOptionPane.INFORMATION_MESSAGE);
     }
 }
+
 
 
 

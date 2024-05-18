@@ -7,8 +7,6 @@ import java.util.List;
 
 public class Experimento implements Serializable {
     private static final long serialVersionUID = -3476464909066190843L;
-
-
     private String archivo;
     private List<Poblacion> poblaciones;
 
@@ -36,14 +34,9 @@ public class Experimento implements Serializable {
         return poblaciones;
     }
 
-    public String getArchivo() {
-        return archivo;
-    }
-
     public void setArchivo(String archivo) {
         this.archivo = archivo;
     }
-
 
     public void ordenarPoblacionesPorNombre() {
         poblaciones.sort(Comparator.comparing(Poblacion::getNombre));
@@ -56,8 +49,8 @@ public class Experimento implements Serializable {
     public void ordenarPoblacionesPorNumeroBacterias() {
         poblaciones.sort(Comparator.comparingInt(Poblacion::getNumBacterias));
     }
-
 }
+
 
 
 
