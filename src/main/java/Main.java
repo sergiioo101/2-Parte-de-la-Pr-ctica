@@ -1,14 +1,11 @@
 import data.FileManager;
 import model.Experimento;
 import model.Poblacion;
-import model.Poblacion;
 import model.Simulacion;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +32,7 @@ public class Main {
         tabbedPane.addTab("Experimentos", createExperimentPanel());
         tabbedPane.addTab("Poblaciones", createPopulationPanel());
         tabbedPane.addTab("Detalles", createDetailsPanel());
+        tabbedPane.addTab("Simulación", createSimulationPanel());
 
         frame.add(tabbedPane);
         frame.setLocationRelativeTo(null);
@@ -205,7 +203,6 @@ public class Main {
         JScrollPane scrollPane = new JScrollPane(detailsArea);
 
         JButton btnShowDetails = new JButton("Mostrar Detalles");
-        JButton btnRunSimulation = new JButton("Ejecutar Simulación");
 
         btnShowDetails.addActionListener(e -> {
             Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
@@ -216,15 +213,74 @@ public class Main {
             }
         });
 
-        btnRunSimulation.addActionListener(e -> runSimulation());
-
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnShowDetails);
-        buttonsPanel.add(btnRunSimulation);
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private static JPanel createSimulationPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        JTextArea simulationDetails = new JTextArea();
+        simulationDetails.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(simulationDetails);
+
+        JButton btnRunSimulation = new JButton("Ejecutar Simulación");
+        btnRunSimulation.addActionListener(e -> runSimulation(simulationDetails));
+
+        JPanel buttonsPanel = new JPanel(new FlowLayout());
+        buttonsPanel.add(btnRunSimulation);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private static void runSimulation(JTextArea simulationDetails) {
+        Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
+        if (selectedPoblacion != null) {
+            simulationDetails.setText(""); // Clear previous results
+            SwingWorker<int[][][], Void> worker = new SwingWorker<int[][][], Void>() {
+                @Override
+                protected int[][][] doInBackground() {
+                    Simulacion simulacion = new Simulacion(selectedPoblacion);
+                    simulacion.ejecutarSimulacion();
+                    return simulacion.getResultados();
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        int[][][] resultados = get();
+                        simulationDetails.append(getPopulationDetails(selectedPoblacion));
+                        simulationDetails.append("\nResultados de la simulación:\n");
+                        mostrarResultadosSimulacion(resultados, simulationDetails);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            worker.execute();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static void mostrarResultadosSimulacion(int[][][] resultados, JTextArea simulationDetails) {
+        for (int day = 0; day < resultados.length; day++) {
+            int[][] plato = resultados[day];
+            simulationDetails.append("Día " + (day + 1) + ":\n");
+            for (int i = 0; i < 20; i++) {
+                for (int j = 0; j < 20; j++) {
+                    simulationDetails.append(String.format("%3d", plato[i][j]) + " ");
+                }
+                simulationDetails.append("\n");
+            }
+            simulationDetails.append("\n");
+        }
     }
 
     private static String getPopulationDetails(Poblacion poblacion) {
@@ -237,9 +293,8 @@ public class Main {
         details.append("Temperatura: ").append(poblacion.getTemperatura()).append("\n");
         details.append("Luminosidad: ").append(poblacion.getLuminosidad()).append("\n");
         details.append("Comida Inicial: ").append(poblacion.getComidaInicial()).append("\n");
-        details.append("Día de Incremento Máximo: ").append(poblacion.getDiaIncremento()).append("\n");
-        details.append("Comida Máxima en el Día de Incremento: ").append(poblacion.getComidaMaxima()).append("\n");
-        details.append("Comida Final en Día 30: ").append(poblacion.getComidaFinal()).append("\n");
+        details.append("Comida Final: ").append(poblacion.getComidaFinal()).append("\n");
+        details.append("Tipo de Alimentación: ").append(poblacion.getTipoAlimentacion()).append("\n");
         details.append("\n");
 
         details.append("Cálculo estimado de la cantidad de comida por día:\n");
@@ -253,9 +308,8 @@ public class Main {
     private static List<Integer> calcularComidaPorDia(Poblacion poblacion) {
         List<Integer> comidaPorDia = new ArrayList<>();
         int comidaInicial = poblacion.getComidaInicial();
-        int diaIncremento = poblacion.getDiaIncremento();
-        int comidaMaxima = poblacion.getComidaMaxima();
         int comidaFinal = poblacion.getComidaFinal();
+        String tipoAlimentacion = poblacion.getTipoAlimentacion();
         int numDias = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
 
         // Asegurarse de que la duración de la población no supere los 30 días
@@ -263,74 +317,32 @@ public class Main {
             numDias = 30;
         }
 
-        for (int dia = 1; dia <= numDias; dia++) {
-            int comidaDia;
-            if (dia <= diaIncremento) {
-                // Hasta el día de incremento máximo, la comida aumenta gradualmente hasta la comida máxima en el día de incremento
-                double incrementoDiario = (double) (comidaMaxima - comidaInicial) / diaIncremento;
-                comidaDia = (int) (comidaInicial + (dia - 1) * incrementoDiario);
-            } else {
-                // Después del día de incremento máximo, la comida disminuye gradualmente hasta la comida final en el último día
-                double decrementoDiario = (double) (comidaMaxima - comidaFinal) / (30 - diaIncremento);
-                comidaDia = (int) (comidaMaxima - (dia - diaIncremento) * decrementoDiario);
-            }
-            comidaPorDia.add(comidaDia);
+        switch (tipoAlimentacion.toLowerCase()) {
+            case "linear":
+                double incrementoDiario = (double) (comidaFinal - comidaInicial) / numDias;
+                for (int i = 0; i < numDias; i++) {
+                    comidaPorDia.add(comidaInicial + (int) (i * incrementoDiario));
+                }
+                break;
+            case "constant":
+                for (int i = 0; i < numDias; i++) {
+                    comidaPorDia.add(comidaInicial);
+                }
+                break;
+            case "alternating":
+                for (int i = 0; i < numDias; i++) {
+                    comidaPorDia.add((i % 2 == 0) ? comidaInicial : 0);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Tipo de alimentación desconocido: " + tipoAlimentacion);
         }
+
         return comidaPorDia;
     }
-
-    private static void runSimulation() {
-        Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
-        if (selectedPoblacion != null) {
-            SwingWorker<int[][][], Void> worker = new SwingWorker<int[][][], Void>() {
-                @Override
-                protected int[][][] doInBackground() {
-                    Simulacion simulacion = new Simulacion(selectedPoblacion);
-                    simulacion.ejecutarSimulacion();
-                    return simulacion.getResultados();
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        int[][][] resultados = get();
-                        mostrarResultadosSimulacion(resultados);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-            worker.execute();
-        } else {
-            JOptionPane.showMessageDialog(frame, "Seleccione una población para simular.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private static void mostrarResultadosSimulacion(int[][][] resultados) {
-        for (int day = 0; day < resultados.length; day++) {
-            int[][] plato = resultados[day];
-            JPanel panel = new JPanel(new GridLayout(20, 20));
-            for (int i = 0; i < 20; i++) {
-                for (int j = 0; j < 20; j++) {
-                    JLabel label = new JLabel();
-                    label.setOpaque(true);
-                    int bacterias = plato[i][j];
-                    if (bacterias >= 20) label.setBackground(Color.RED);
-                    else if (bacterias >= 15) label.setBackground(Color.MAGENTA);
-                    else if (bacterias >= 10) label.setBackground(Color.ORANGE);
-                    else if (bacterias >= 5) label.setBackground(Color.YELLOW);
-                    else if (bacterias >= 1) label.setBackground(Color.GREEN);
-                    else label.setBackground(Color.WHITE);
-                    panel.add(label);
-                }
-            }
-            int finalDay = day + 1;
-            SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(frame, panel, "Resultados del Día " + finalDay, JOptionPane.PLAIN_MESSAGE);
-            });
-        }
-    }
 }
+
+
 
 
 
