@@ -2,6 +2,7 @@ package model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Experimento implements Serializable {
@@ -42,6 +43,20 @@ public class Experimento implements Serializable {
     public void setArchivo(String archivo) {
         this.archivo = archivo;
     }
+
+
+    public void ordenarPoblacionesPorNombre() {
+        poblaciones.sort(Comparator.comparing(Poblacion::getNombre));
+    }
+
+    public void ordenarPoblacionesPorFechaInicio() {
+        poblaciones.sort(Comparator.comparing(Poblacion::getFechaInicio));
+    }
+
+    public void ordenarPoblacionesPorNumeroBacterias() {
+        poblaciones.sort(Comparator.comparingInt(Poblacion::getNumBacterias));
+    }
+
 }
 
 

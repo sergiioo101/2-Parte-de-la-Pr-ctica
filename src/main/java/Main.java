@@ -107,24 +107,41 @@ public class Main {
         JButton btnAdd = new JButton("Añadir Población");
         JButton btnEdit = new JButton("Editar Población");
         JButton btnRemove = new JButton("Eliminar Población");
-        JButton btnSortByName = new JButton("Ordenar por Nombre");
-        JButton btnSortByDate = new JButton("Ordenar por Fecha");
-        JButton btnSortByNumBacterias = new JButton("Ordenar por Número de Bacterias");
 
         btnAdd.addActionListener(e -> addPopulation());
         btnEdit.addActionListener(e -> editPopulation());
         btnRemove.addActionListener(e -> removePopulation());
-        btnSortByName.addActionListener(e -> sortPoblacionesByName());
-        btnSortByDate.addActionListener(e -> sortPoblacionesByDate());
-        btnSortByNumBacterias.addActionListener(e -> sortPoblacionesByNumBacterias());
 
         buttonsPanel.add(btnAdd);
         buttonsPanel.add(btnEdit);
         buttonsPanel.add(btnRemove);
-        buttonsPanel.add(btnSortByName);
-        buttonsPanel.add(btnSortByDate);
-        buttonsPanel.add(btnSortByNumBacterias);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
+
+        // Añadir JComboBox y botón para ordenación
+        String[] sortOptions = {"Nombre", "Fecha de Inicio", "Número de Bacterias"};
+        JComboBox<String> sortComboBox = new JComboBox<>(sortOptions);
+        JButton btnSort = new JButton("Ordenar");
+
+        btnSort.addActionListener(e -> {
+            String selectedOption = (String) sortComboBox.getSelectedItem();
+            if (selectedOption != null) {
+                switch (selectedOption) {
+                    case "Nombre":
+                        currentExperiment.ordenarPoblacionesPorNombre();
+                        break;
+                    case "Fecha de Inicio":
+                        currentExperiment.ordenarPoblacionesPorFechaInicio();
+                        break;
+                    case "Número de Bacterias":
+                        currentExperiment.ordenarPoblacionesPorNumeroBacterias();
+                        break;
+                }
+                updatePoblacionesList();
+            }
+        });
+
+        buttonsPanel.add(sortComboBox);
+        buttonsPanel.add(btnSort);
 
         return panel;
     }
@@ -245,7 +262,6 @@ public class Main {
                     int diaIncremento = Integer.parseInt(diaIncrementoField.getText());
                     int comidaMaxima = Integer.parseInt(comidaMaximaField.getText());
 
-                    // Aquí cambiamos los setters de la población para actualizar sus valores
                     poblacion.setNombre(nombre);
                     poblacion.setFechaFin(fechaFin);
                     poblacion.setNumBacterias(numBacterias);
@@ -256,7 +272,7 @@ public class Main {
                     poblacion.setDiaIncremento(diaIncremento);
                     poblacion.setComidaMaxima(comidaMaxima);
                     poblacion.setTipoAlimentacion(tipoAlimentacion);
-                    poblacion.generarPlanAlimentacion(); // Generamos el plan de alimentación de nuevo
+                    poblacion.generarPlanAlimentacion();
 
                     updatePoblacionesList();
                     JOptionPane.showMessageDialog(frame, "Población editada correctamente.");
@@ -280,37 +296,12 @@ public class Main {
         }
     }
 
-    private static void sortPoblacionesByName() {
-        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
-        poblaciones.sort((p1, p2) -> p1.getNombre().compareTo(p2.getNombre()));
-        updatePoblacionesList(poblaciones);
-    }
-
-    private static void sortPoblacionesByDate() {
-        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
-        poblaciones.sort((p1, p2) -> p1.getFechaInicio().compareTo(p2.getFechaInicio()));
-        updatePoblacionesList(poblaciones);
-    }
-
-    private static void sortPoblacionesByNumBacterias() {
-        List<Poblacion> poblaciones = new ArrayList<>(currentExperiment.getPoblaciones());
-        poblaciones.sort((p1, p2) -> Integer.compare(p1.getNumBacterias(), p2.getNumBacterias()));
-        updatePoblacionesList(poblaciones);
-    }
-
     private static void updatePoblacionesList() {
         listModel.clear();
         if (currentExperiment != null && currentExperiment.getPoblaciones() != null) {
             for (Poblacion p : currentExperiment.getPoblaciones()) {
                 listModel.addElement(p.getNombre());
             }
-        }
-    }
-
-    private static void updatePoblacionesList(List<Poblacion> poblaciones) {
-        listModel.clear();
-        for (Poblacion p : poblaciones) {
-            listModel.addElement(p.getNombre());
         }
     }
 
@@ -351,7 +342,7 @@ public class Main {
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         buttonsPanel.add(btnRunSimulation);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.NORTH);
         panel.add(buttonsPanel, BorderLayout.SOUTH);
 
         simulationGridPanel = new JPanel(new GridLayout(20, 20));
@@ -364,22 +355,43 @@ public class Main {
         Poblacion selectedPoblacion = currentExperiment.getPoblacion(listPoblaciones.getSelectedValue());
         if (selectedPoblacion != null) {
             simulationDetails.setText(""); // Clear previous results
-            SwingWorker<int[][][], Void> worker = new SwingWorker<int[][][], Void>() {
+            SwingWorker<Void, int[][]> worker = new SwingWorker<Void, int[][]>() {
+                private Simulacion simulacion; // Definir simulacion aquí
+
                 @Override
-                protected int[][][] doInBackground() {
-                    Simulacion simulacion = new Simulacion(selectedPoblacion);
-                    simulacion.ejecutarSimulacion();
-                    return simulacion.getResultados();
+                protected Void doInBackground() {
+                    simulacion = new Simulacion(selectedPoblacion);
+                    int days = selectedPoblacion.getFechaInicio().until(selectedPoblacion.getFechaFin()).getDays() + 1;
+
+                    for (int day = 0; day < days; day++) {
+                        simulacion.simularDia();
+                        simulacion.repartirComida(selectedPoblacion.getPlanAlimentacion().get(day));
+                        simulacion.guardarResultadoDia(day);
+                        publish(simulacion.getResultados()[day]);
+                        try {
+                            Thread.sleep(100); // Pausa para visualizar cambios en tiempo real
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void process(List<int[][]> chunks) {
+                    if (!chunks.isEmpty()) {
+                        int[][] ultimoResultado = chunks.get(chunks.size() - 1);
+                        mostrarCuadriculaSimulacion(ultimoResultado);
+                    }
                 }
 
                 @Override
                 protected void done() {
                     try {
-                        int[][][] resultados = get();
                         simulationDetails.append(getPopulationDetails(selectedPoblacion));
                         simulationDetails.append("\nResultados de la simulación:\n");
-                        mostrarResultadosSimulacion(resultados, simulationDetails);
-                        mostrarCuadriculaSimulacion(resultados);
+                        // Llamar a mostrarResultadosSimulacion con la lista de resultados
+                        mostrarResultadosSimulacion(simulacion.getResultados());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -391,27 +403,27 @@ public class Main {
         }
     }
 
-    private static void mostrarResultadosSimulacion(int[][][] resultados, JTextArea simulationDetails) {
+
+    private static void mostrarResultadosSimulacion(int[][][] resultados) {
         for (int day = 0; day < resultados.length; day++) {
             int[][] plato = resultados[day];
-            simulationDetails.append("Día " + (day + 1) + ":\n");
             for (int i = 0; i < 20; i++) {
                 for (int j = 0; j < 20; j++) {
-                    simulationDetails.append(String.format("%3d", plato[i][j]) + " ");
+                    System.out.print(String.format("%3d", plato[i][j]) + " ");
                 }
-                simulationDetails.append("\n");
+                System.out.println();
             }
-            simulationDetails.append("\n");
+            System.out.println();
         }
     }
 
-    private static void mostrarCuadriculaSimulacion(int[][][] resultados) {
+    private static void mostrarCuadriculaSimulacion(int[][] resultadosDia) {
         simulationGridPanel.removeAll();
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
                 JLabel cell = new JLabel();
                 cell.setOpaque(true);
-                int bacterias = resultados[resultados.length - 1][i][j]; // Mostramos el último día
+                int bacterias = resultadosDia[i][j];
                 if (bacterias >= 20) {
                     cell.setBackground(Color.RED);
                 } else if (bacterias >= 15) {
@@ -444,7 +456,7 @@ public class Main {
         details.append("Comida Inicial: ").append(poblacion.getComidaInicial()).append("\n");
         details.append("Día de Incremento Máximo: ").append(poblacion.getDiaIncremento()).append("\n");
         details.append("Comida Máxima en el Día de Incremento: ").append(poblacion.getComidaMaxima()).append("\n");
-        details.append("Comida Final: ").append(poblacion.getComidaFinal()).append("\n");
+        details.append("Comida Final en Día 30: ").append(poblacion.getComidaFinal()).append("\n");
         details.append("\n");
 
         details.append("Cálculo estimado de la cantidad de comida por día:\n");
@@ -466,11 +478,9 @@ public class Main {
         for (int dia = 1; dia <= numDias; dia++) {
             int comidaDia;
             if (dia <= diaIncremento) {
-                // Hasta el día de incremento máximo, la comida aumenta gradualmente hasta la comida máxima en el día de incremento
                 double incrementoDiario = (double) (comidaMaxima - comidaInicial) / diaIncremento;
                 comidaDia = (int) (comidaInicial + (dia - 1) * incrementoDiario);
             } else {
-                // Después del día de incremento máximo, la comida disminuye gradualmente hasta la comida final en el último día
                 double decrementoDiario = (double) (comidaMaxima - comidaFinal) / (numDias - diaIncremento);
                 comidaDia = (int) (comidaMaxima - (dia - diaIncremento) * decrementoDiario);
             }

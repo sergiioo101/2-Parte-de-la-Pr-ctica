@@ -31,8 +31,8 @@ public class Simulacion {
     public void ejecutarSimulacion() {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
-            repartirComida(poblacion.getPlanAlimentacion().get(day)); // Repartir la comida antes de la simulación
             simularDia();
+            repartirComida(poblacion.getPlanAlimentacion().get(day));
             guardarResultadoDia(day);
             System.out.println("Simulación día " + (day + 1) + " completada.");
         }
@@ -55,7 +55,7 @@ public class Simulacion {
         plato = nuevoPlato;
     }
 
-    private void simularBacteria(int x, int y, int[][] nuevoPlato) {
+    public void simularBacteria(int x, int y, int[][] nuevoPlato) {
         int comidaConsumida = 0;
         for (int step = 0; step < 10; step++) {
             int comidaEnCelda = plato[x][y];
@@ -84,7 +84,7 @@ public class Simulacion {
         reproducirBacterias(x, y, nuevoPlato, comidaConsumida);
     }
 
-    private void moverBacteria(int x, int y, int fate, int[][] nuevoPlato) {
+    public void moverBacteria(int x, int y, int fate, int[][] nuevoPlato) {
         int newX = x, newY = y;
         if (fate >= 60 && fate < 65) newX = x - 1;
         else if (fate >= 65 && fate < 70) newX = x + 1;
@@ -98,7 +98,7 @@ public class Simulacion {
         }
     }
 
-    private void reproducirBacterias(int x, int y, int[][] nuevoPlato, int comidaConsumida) {
+    public void reproducirBacterias(int x, int y, int[][] nuevoPlato, int comidaConsumida) {
         if (comidaConsumida >= 150) {
             nuevoPlato[x][y] += 3;
         } else if (comidaConsumida >= 100) {
@@ -129,6 +129,7 @@ public class Simulacion {
         return resultados;
     }
 }
+
 
 
 
