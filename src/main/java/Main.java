@@ -25,6 +25,8 @@ public class Main {
         // Mensaje de bienvenida
         JOptionPane.showMessageDialog(null, "¡Bienvenido al Gestor de Experimentos de Cultivo de Bacterias!", "Bienvenida", JOptionPane.INFORMATION_MESSAGE);
         SwingUtilities.invokeLater(Main::createAndShowGUI);
+        System.out.println("Current working directory: " + System.getProperty("user.dir"));
+
     }
 
     private static void createAndShowGUI() {
@@ -33,7 +35,8 @@ public class Main {
         frame.setSize(800, 600);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-
+        tabbedPane.setBackground(new Color(173, 216, 230)); // Azul claro
+        tabbedPane.addTab("Inicio", createWelcomePanel());
         tabbedPane.addTab("Experimentos", createExperimentPanel());
         tabbedPane.addTab("Poblaciones", createPopulationPanel());
         tabbedPane.addTab("Detalles", createDetailsPanel());
@@ -42,6 +45,36 @@ public class Main {
         frame.add(tabbedPane);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    private static JPanel createWelcomePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        // Texto grande
+        JLabel welcomeLabel = new JLabel("Gestor de Experimentos de Cultivo de Bacterias", JLabel.CENTER);
+        welcomeLabel.setFont(new Font("Serif", Font.BOLD, 24));
+        panel.add(welcomeLabel, BorderLayout.NORTH);
+
+        // Imagen de bacteria
+        String imagePath = "C:\\Users\\34620\\Downloads\\pruebaprogra.jpg"; // Asegúrate de mover la imagen a este directorio
+        ImageIcon bacteriaIcon = new ImageIcon(imagePath);
+
+        if (bacteriaIcon.getIconWidth() == -1) {
+            JLabel errorLabel = new JLabel("Error al cargar la imagen desde: " + imagePath);
+            errorLabel.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(errorLabel, BorderLayout.CENTER);
+        } else {
+            // Redimensionar la imagen si es necesario
+            Image bacteriaImage = bacteriaIcon.getImage();
+            Image scaledImage = bacteriaImage.getScaledInstance(400, 400, Image.SCALE_SMOOTH); // Ajusta el tamaño según tus necesidades
+            bacteriaIcon = new ImageIcon(scaledImage);
+
+            JLabel imageLabel = new JLabel(bacteriaIcon);
+            panel.add(imageLabel, BorderLayout.CENTER);
+        }
+
+        return panel;
     }
 
     private static JPanel createExperimentPanel() {
@@ -160,7 +193,7 @@ public class Main {
         JComboBox<String> luminosidadComboBox = new JComboBox<>(LUMINOSIDAD_OPTIONS);
         JTextField comidaInicialField = new JTextField();
         JTextField comidaFinalField = new JTextField();
-        JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"linear", "constant", "alternating"});
+        JComboBox<String> tipoAlimentacionComboBox = new JComboBox<>(new String[]{"Lineal", "Constante", "Alternativa"});
         JTextField diaIncrementoField = new JTextField();
         JTextField comidaMaximaField = new JTextField();
 
