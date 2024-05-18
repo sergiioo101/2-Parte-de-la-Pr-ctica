@@ -31,13 +31,14 @@ public class Simulacion {
     public void ejecutarSimulacion() {
         int days = poblacion.getFechaInicio().until(poblacion.getFechaFin()).getDays() + 1;
         for (int day = 0; day < days; day++) {
+            repartirComida(poblacion.getPlanAlimentacion().get(day)); // Repartir la comida antes de la simulación
             simularDia();
-            repartirComida(poblacion.getPlanAlimentacion().get(day));
             guardarResultadoDia(day);
+            System.out.println("Simulación día " + (day + 1) + " completada.");
         }
     }
 
-    private void simularDia() {
+    public void simularDia() {
         int[][] nuevoPlato = new int[20][20];
 
         for (int i = 0; i < 20; i++) {
@@ -107,7 +108,7 @@ public class Simulacion {
         }
     }
 
-    private void repartirComida(int comidaTotal) {
+    public void repartirComida(int comidaTotal) {
         int comidaPorCelda = comidaTotal / (20 * 20);
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
@@ -116,7 +117,7 @@ public class Simulacion {
         }
     }
 
-    private void guardarResultadoDia(int day) {
+    public void guardarResultadoDia(int day) {
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
                 resultados[day][i][j] = plato[i][j];
@@ -128,6 +129,12 @@ public class Simulacion {
         return resultados;
     }
 }
+
+
+
+
+
+
 
 
 
